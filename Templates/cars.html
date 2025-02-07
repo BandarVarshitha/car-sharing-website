@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Car Sharing{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div id="filter-section">
+        <div class="row mb-4 flex-nowrap overflow-auto">
+            <form id="filter-form" method="GET" action="{{ url_for('cars') }}" class="d-flex gap-3">
+                <div>
+                    <label for="filter-price-min" class="form-label">Min Price</label>
+                    <input type="text" id="filter-price-min" name="price_min" class="form-control" placeholder="Min">
+                </div>
+                <div>
+                    <label for="filter-price-max" class="form-label">Max Price</label>
+                    <input type="text" id="filter-price-max" name="price_max" class="form-control" placeholder="Max">
+                </div>
+                <div>
+                    <label for="filter-company" class="form-label">Company</label>
+                    <select id="filter-company" name="company" class="form-control">
+                        <option value="">Company</option>
+                        {% for company in companies %}
+                        <option value="{{ company.company_name }}">{{ company.company_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="filter-car-type" class="form-label">Car Type</label>
+                    <select id="filter-car-type" name="car_type" class="form-control">
+                        <option value="">Type</option>
+                        {% for car_type in car_types %}
+                        <option value="{{ car_type.type_name }}">{{ car_type.type_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="filter-location" class="form-label">Location</label>
+                    <input type="text" id="filter-location" name="location" class="form-control" placeholder="Location">
+                </div>
+                <div>
+                    <label for="sort-price" class="form-label">Sort by Price</label>
+                    <select id="sort-price" name="sort_price" class="form-control">
+                        <option value="">Sort</option>
+                        <option value="asc">Low to High</option>
+                        <option value="desc">High to Low</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-white border-orange text-orange align-self-end">Apply</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row" id="car-container">
+        {% if cars %}
+            {% for car in cars %}
+            <div class="col-6 col-sm-4 col-lg-3 mb-4 car-card position-relative" data-price="{{ car.price_per_day }}" data-company="{{ car.company_name }}" data-car-type="{{ car.type_name }}" data-location="{{ car.from_location }} {{ car.to_location }}">
+                <div class="card h-100 border-0">
+                    <img src="{{ url_for('static', filename='uploads/' ~ car.image_url) }}" class="card-img-top object-fit-cover rounded" alt="{{ car.car_name }}" style="height:200px; object-fit:cover;" onerror="this.onerror=null;this.src='../static/images/no_image_available.png';">
+                    <div class="card-body text-center">
+                        <h6 class="card-title mb-2">{{ car.car_name }}</h6>
+                        <p class="card-text mb-1 text-muted">{{ car.company_name }}</p>
+                        <p class="card-text mb-0 text-muted">{{ car.type_name }}</p>
+                        <a href="{{ url_for('book_car_confirm', car_id=car.car_id) }}" class="btn btn-white border-orange text-orange mt-2">Book this car</a>
+                    </div>
+                    <div class="price-overlay position-absolute top-0 end-0 bg-orange text-white p-2 rounded-start">${{ car.price_per_day }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <p class="text-center">No cars found.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .btn-white {
+        background-color: white;
+        border: 2px solid #ff4500;
+    }
+
+    .btn-white:hover {
+        background-color: #ff4500;
+        color: white;
+    }
+
+    .text-orange {
+        color: #ff4500;
+    }
+
+    .border-orange {
+        border-color: #ff4500;
+    }
+
+    .car-card:hover {
+        background: rgba(0, 0, 0, 0.05);
+        transition: background 0.3s ease;
+    }
+
+    .price-overlay {
+        font-size: 0.9rem;
+        font-weight: bold;
+        background-color: #ff4500;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+{% endblock %}

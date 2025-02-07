@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Car Details{% endblock %}
+
+{% block content %}
+<div class="container  col-4 mt-5">
+    <h3 class="text-center mb-4">Car Details</h3>
+    <div class="card mb-3 p-4">
+        <img src="{{ url_for('static', filename='uploads/' ~ car.image_url) }}" class="img-fluid rounded-start" alt="Car Image" style="width:100%;max-width:400px;margin:0 auto;height:300px">
+        <div class="card-body">
+            <h5 class="card-title">{{ car.car_name }}</h5>
+            <p class="card-text"><strong>Owner:</strong> {{ car.username }}</p>
+            <p class="card-text"><strong>Type:</strong> {{ car.type_name }}</p>
+            <p class="card-text"><strong>Company:</strong> {{ car.company_name }}</p>
+            <p class="card-text"><strong>Stock:</strong> {{ car.stock }}</p>
+            <p class="card-text"><strong>Price per day:</strong> ${{ car.price_per_day }}</p>
+            <p class="card-text"><strong>From Location:</strong> {{ car.from_location }}</p>
+            <p class="card-text"><strong>To Location:</strong> {{ car.to_location }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

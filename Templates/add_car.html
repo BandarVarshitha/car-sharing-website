@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Add/Edit Car{% endblock %}
+
+{% block content %}
+<div class="add-car-form container mt-5">
+    <h3 class="text-center">{% if car %}Edit{% else %}Add{% endif %} Car</h3>
+    <form method="POST" enctype="multipart/form-data" class="mt-4" id="addCarForm" novalidate>
+        <div class="form-outline mb-4">
+            <label class="form-label" for="car_name">Car Name</label>
+            <input type="text" id="car_name" class="form-control" name="car_name"
+                value="{{ car.car_name if car else '' }}" required />
+            <div class="text-danger" id="car_name_error"></div>
+        </div>
+        <div class="form-outline mb-4">
+            <label class="form-label" for="car_number">Car Number</label>
+            <input type="text" id="car_number" class="form-control" name="car_number"
+                value="{{ car.car_number if car else '' }}" required />
+            <div class="text-danger" id="car_number_error"></div>
+        </div>
+        <div class="form-outline mb-4">
+            <label class="form-label" for="car_type">Car Type</label>
+            <select id="car_type" class="form-control" name="car_type" required>
+                <option value="" disabled selected>Select Car Type</option>
+                {% for type in car_types %}
+                <option value="{{ type.type_name }}" {% if car and car.type_name==type.type_name %}selected{% endif %}>
+                    {{ type.type_name }}</option>
+                {% endfor %}
+                <option value="Other">Other</option>
+            </select>
+            <div class="text-danger" id="car_type_error"></div>
+        </div>
+        <div class="form-outline mb-4" id="car_type_name_div" style="display: none;">
+            <label class="form-label" for="car_type_name">Car Type Name</label>
+            <input type="text" id="car_type_name" class="form-control" name="car_type_name" />
+            <div class="text-danger" id="car_type_name_error"></div>
+        </div>
+        <div class="form-outline mb-4">
+            <label class="form-label" for="company_name">Company</label>
+            <select id="company_name" class="form-control" name="company_name" required>
+                <option value="" disabled selected>Select Company</option>
+                {% for company in companies %}
+                <option value="{{ company.company_name }}" {% if car and car.company_name==company.company_name
+                    %}selected{% endif %}>{{ company.company_name }}</option>
+                {% endfor %}
+                <option value="Other">Other</option>
+            </select>
+            <div class="text-danger" id="company_name_error"></div>
+        </div>
+        <div class="form-outline mb-4" id="company_name_input_div" style="display: none;">
+            <label class="form-label" for="company_name_input">Company Name</label>
+            <input type="text" id="company_name_input" class="form-control" name="company_name_input" />
+            <div class="text-danger" id="company_name_input_error"></div>
+        </div>
+        <div class="form-outline mb-4">
+            <label class="form-label" for="stock">Stock</label>
+            <input type="number" id="stock" class="form-control" name="stock" value="{{ car.stock if car else '' }}"
+                required />
+            <div class="text-danger" id="stock_error"></div>
+        </div>
+        <div class="form-outline mb-4">
+            <label class="form-label" for="price">Price Per Day</label>
+            <input type="number" id="price" class="form-control" name="price"
+                value="{{ car.price_per_day if car else '' }}" required />
+            <div class="text-danger" id="price_error"></div>
+        </div>
+        <div class="form-outline mb-4">
+            <label class="form-label" for="from_location">From Location</label>
+            <input type="text" id="from_location" class="form-control" name="from_location"
+                value="{{ car.from_location if car else '' }}" required />
+            <div class="text-danger" id="from_location_error"></div>
+        </div>
+        <div class="form-outline mb-4">
+            <label class="form-label" for="to_location">To Location</label>
+            <input type="text" id="to_location" class="form-control" name="to_location"
+                value="{{ car.to_location if car else '' }}" required />
+            <div class="text-danger" id="to_location_error"></div>
+        </div>
+        <div class="form-outline mb-4">
+            <label class="form-label" for="car_image">Car Image</label>
+            <input type="file" id="car_image" class="form-control" name="car_image" accept=".png, .jpg, .jpeg" required />
+            <div class="text-danger" id="car_image_error"></div>
+            <img id="car_image_preview" src="{{ url_for('static', filename='uploads/' + car.image_url) if car and car.image_url else '#' }}" alt="Image Preview"
+                style="display: {{ 'block' if car and car.image_url else 'none' }}; width: 100px; height: 75px; margin-top: 10px;" />
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Save</button>
+    </form>
+</div>
+
+<script>
+    document.getElementById('car_type').addEventListener('change', function () {
+        var carTypeNameDiv = document.getElementById('car_type_name_div');
+        if (this.value === 'Other') {
+            carTypeNameDiv.style.display = 'block';
+        } else {
+            carTypeNameDiv.style.display = 'none';
+        }
+    });
+
+    document.getElementById('company_name').addEventListener('change', function () {
+        var companyNameInputDiv = document.getElementById('company_name_input_div');
+        if (this.value === 'Other') {
+            companyNameInputDiv.style.display = 'block';
+        } else {
+            companyNameInputDiv.style.display = 'none';
+        }
+    });
+
+    document.getElementById('car_image').addEventListener('change', function () {
+        var file = this.files[0];
+        var validImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (file && validImageTypes.includes(file.type)) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('car_image_preview').src = e.target.result;
+                document.getElementById('car_image_preview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            document.getElementById('car_image_error').innerText = "";
+        } else {
+            document.getElementById('car_image_error').innerText = "Invalid image file format. Only PNG, JPG, and JPEG are allowed.";
+            document.getElementById('car_image_preview').style.display = 'none';
+        }
+    });
+
+    document.getElementById('addCarForm').addEventListener('submit', function (event) {
+        var isValid = true;
+        var firstInvalidElement = null;
+
+        var carName = document.getElementById('car_name').value;
+        var carNumber = document.getElementById('car_number').value;
+        var carType = document.getElementById('car_type').value;
+        var carTypeName = document.getElementById('car_type_name').value;
+        var companyName = document.getElementById('company_name').value;
+        var companyNameInput = document.getElementById('company_name_input').value;
+        var stock = document.getElementById('stock').value;
+        var price = document.getElementById('price').value;
+        var fromLocation = document.getElementById('from_location').value;
+        var toLocation = document.getElementById('to_location').value;
+        var carImage = document.getElementById('car_image').files[0];
+
+        if (!carName) {
+            isValid = false;
+            document.getElementById('car_name_error').innerText = "Car name is required.";
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.getElementById('car_name');
+            }
+        } else {
+            document.getElementById('car_name_error').innerText = "";
+        }
+
+        if (!carNumber) {
+            isValid = false;
+            document.getElementById('car_number_error').innerText = "Car number is required.";
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.getElementById('car_number');
+            }
+        } else {
+            document.getElementById('car_number_error').innerText = "";
+        }
+
+        if (!carType) {
+            isValid = false;
+            document.getElementById('car_type_error').innerText = "Car type is required.";
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.getElementById('car_type');
+            }
+        } else {
+            document.getElementById('car_type_error').innerText = "";
+        }
+
+        if (carType === 'Other' && !carTypeName) {
+            isValid = false;
+            document.getElementById('car_type_name_error').innerText = "Car type name is required.";
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.getElementById('car_type_name');
+            }
+        } else {
+            document.getElementById('car_type_name_error').innerText = "";
+        }
+
+        if (!companyName) {
+            isValid = false;
+            document.getElementById('company_name_error').innerText = "Company name is required.";
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.getElementById('company_name');
+            }
+        } else {
+            document.getElementById('company_name_error').innerText = "";
+        }
+
+        if (companyName === 'Other' && !companyNameInput) {
+            isValid = false;
+            document.getElementById('company_name_input_error').innerText = "Company name input is required.";
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.getElementById('company_name_input');
+            }
+        } else {
+            document.getElementById('company_name_input_error').innerText = "";
+        }
+
+        if (!stock) {
+            isValid = false;
+            document.getElementById('stock_error').innerText = "Stock is required.";
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.getElementById('stock');
+            }
+        } else {
+            document.getElementById('stock_error').innerText = "";
+        }
+
+        if (!price) {
+            isValid = false;
+            document.getElementById('price_error').innerText = "Price per day is required.";
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.getElementById('price');
+            }
+        } else {
+            document.getElementById('price_error').innerText = "";
+        }
+
+        if (!fromLocation) {
+            isValid = false;
+            document.getElementById('from_location_error').innerText = "From location is required.";
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.getElementById('from_location');
+            }
+        } else {
+            document.getElementById('from_location_error').innerText = "";
+        }
+
+        if (!toLocation) {
+            isValid = false;
+            document.getElementById('to_location_error').innerText = "To location is required.";
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.getElementById('to_location');
+            }
+        } else {
+            document.getElementById('to_location_error').innerText = "";
+        }
+
+        if (!carImage) {
+            isValid = false;
+            document.getElementById('car_image_error').innerText = "Car image is required.";
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.getElementById('car_image');
+            }
+        } else {
+            var validImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!validImageTypes.includes(carImage.type)) {
+                isValid = false;
+                document.getElementById('car_image_error').innerText = "Invalid image file format. Only PNG, JPG, and JPEG are allowed.";
+                if (!firstInvalidElement) {
+                    firstInvalidElement = document.getElementById('car_image');
+                }
+            } else {
+                document.getElementById('car_image_error').innerText = "";
+            }
+        }
+
+        if (!isValid) {
+            event.preventDefault();
+            if (firstInvalidElement) {
+                firstInvalidElement.focus();
+            }
+        }
+    });
+</script>
+{% endblock %}

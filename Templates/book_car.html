@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Book Car{% endblock %}
+
+{% block content %}
+<div class="container  mt-5 ">
+    <h3 class="text-center mb-4">Book Car</h3>
+    <form method="POST" class="container col-lg-6 shadow p-5" action="{{ url_for('book_car') }}" onsubmit="return validateBookCarForm()">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="pickup_date">Pickup Date</label>
+                    <input type="date" id="pickup_date" class="form-control" name="pickup_date" value="{{ pickup_date }}" min="{{ today }}" />
+                    <span id="pickup-date-error" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="dropoff_date">Dropoff Date</label>
+                    <input type="date" id="dropoff_date" class="form-control" name="dropoff_date" value="{{ dropoff_date }}" min="{{ today }}" />
+                    <span id="dropoff-date-error" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="from_location">From Location</label>
+                    <select id="from_location" class="form-control" name="from_location" >
+                        <option value="">Select From Location</option>
+                        {% for location in from_locations %}
+                            <option value="{{ location.from_location }}" {% if location.from_location == from_location %}selected{% endif %}>{{ location.from_location }}</option>
+                        {% endfor %}
+                    </select>
+                    <span id="from-location-error" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="to_location">To Location</label>
+                    <select id="to_location" class="form-control" name="to_location" >
+                        <option value="">Select To Location</option>
+                        {% for location in to_locations %}
+                            <option value="{{ location.to_location }}" {% if location.to_location == to_location %}selected{% endif %}>{{ location.to_location }}</option>
+                        {% endfor %}
+                    </select>
+                    <span id="to-location-error" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    {% if available_cars is not none %}
+        <div class="mt-5">
+            <h4 class="text-center mb-4">Available Cars</h4>
+            {% if available_cars %}
+                <div class="row" id="car-container">
+                    {% for car in available_cars %}
+                        <div class="col col-lg-3 col-md-4  col-sm-6 mb-4 car-card position-relative" data-price="{{ car.price_per_day }}" data-company="{{ car.company_name }}" data-car-type="{{ car.type_name }}" data-location="{{ car.from_location }} {{ car.to_location }}">
+                            <div class="card h-100 border-0">
+                                <img src="{{ url_for('static', filename='uploads/' ~ car.image_url) }}" class="card-img-top object-fit-cover rounded" alt="{{ car.car_name }}" style="height:200px; object-fit:cover;" onerror="this.onerror=null;this.src='../static/images/no_image_available.png';">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title mb-2">{{ car.car_name }}</h6>
+                                    <p class="card-text mb-1 text-muted">{{ car.company_name }}</p>
+                                    <p class="card-text mb-0 text-muted">{{ car.type_name }}</p>
+                                    <a href="{{ url_for('book_car_confirm', car_id=car.car_id, pickup_date=request.form['pickup_date'], dropoff_date=request.form['dropoff_date']) }}" class="btn btn-white border-orange text-orange mt-2">Book this car</a>
+                                </div>
+                                <div class="price-overlay position-absolute top-0 end-0 bg-orange text-white p-2 rounded-start">${{ car.price_per_day }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-center">No cars available for the selected dates and locations.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .btn-white {
+        background-color: white;
+        border: 2px solid #ff4500;
+    }
+
+    .btn-white:hover {
+        background-color: #ff4500;
+        color: white;
+    }
+
+    .text-orange {
+        color: #ff4500;
+    }
+
+    .border-orange {
+        border-color: #ff4500;
+    }
+
+    .car-card:hover {
+        background: rgba(0, 0, 0, 0.05);
+        transition: background 0.3s ease;
+    }
+
+    .price-overlay {
+        font-size: 0.9rem;
+        font-weight: bold;
+        background-color: #ff4500;
+    }
+</style>
+
+<script>
+function validateBookCarForm() {
+    let valid = true;
+    const fromLocation = document.getElementById('from_location').value;
+    const toLocation = document.getElementById('to_location').value;
+    const pickupDate = document.getElementById('pickup_date').value;
+    const dropoffDate = document.getElementById('dropoff_date').value;
+    const today = new Date().toISOString().split('T')[0];
+
+    if (!fromLocation) {
+        document.getElementById('from-location-error').textContent = 'From location is required!';
+        valid = false;
+    } else {
+        document.getElementById('from-location-error').textContent = '';
+    }
+
+    if (!toLocation) {
+        document.getElementById('to-location-error').textContent = 'To location is required!';
+        valid = false;
+    } else {
+        document.getElementById('to-location-error').textContent = '';
+    }
+
+    if (!pickupDate) {
+        document.getElementById('pickup-date-error').textContent = 'Pickup date is required!';
+        valid = false;
+    } else if (new Date(pickupDate) < new Date(today)) {
+        document.getElementById('pickup-date-error').textContent = 'Pickup date cannot be in the past!';
+        valid = false;
+    } else {
+        document.getElementById('pickup-date-error').textContent = '';
+    }
+
+    if (!dropoffDate) {
+        document.getElementById('dropoff-date-error').textContent = 'Dropoff date is required!';
+        valid = false;
+    } else if (new Date(dropoffDate) < new Date(today)) {
+        document.getElementById('dropoff-date-error').textContent = 'Dropoff date cannot be in the past!';
+        valid = false;
+    } else {
+        document.getElementById('dropoff-date-error').textContent = '';
+    }
+
+    return valid;
+}
+</script>
+{% endblock %}

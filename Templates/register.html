@@ -1,0 +1,468 @@
+{% extends "base.html" %}
+
+{% block title %}Car Sharing{% endblock %}
+
+{% block content %}
+
+<div class="register-card">
+    <h3>Registration Form</h3>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="alert-container">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    <form id="registerForm" method="POST" action="/register" enctype="multipart/form-data">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="username">User Name</label>
+                    <input type="text" id="username" class="form-control" name='username' />
+                    <div class="invalid-feedback text-danger">Username must be at least 3 characters long.</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="login">Login Id</label>
+                    <input type="text" id="login" class="form-control" name='login' />
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-control" name='password' />
+                    <div class="invalid-feedback text-danger">Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="confirmpassword">Confirm Password</label>
+                    <input type="password" id="confirmpassword" class="form-control" name='confirmpassword'  />
+                    <div class="invalid-feedback text-danger">Passwords do not match.</div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="dob">Birthday</label>
+                    <input type="date" id="dob" class="form-control" name='dob' />
+                    <div class="invalid-feedback text-danger">Please enter a valid date of birth.</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <h6 class="mb-2 pb-1">Gender: </h6>
+                    <div class="form-check form-check-inline">
+                        <label class="form-check-label" for="femaleGender">Female</label>
+                        <input class="form-check-input" type="radio" name="gender" id="femaleGender" value="Female" />
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <label class="form-check-label" for="maleGender">Male</label>
+                        <input class="form-check-input" type="radio" name="gender" id="maleGender" value="Male" />
+                    </div>
+                    <div class="invalid-feedback text-danger" id="genderError" style="display: none;">Please select a gender.</div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" class="form-control" name='email' />
+                    <div class="invalid-feedback text-danger">Please enter a valid email address.</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="phonenumber">Phone Number</label>
+                    <input type="tel" id="phonenumber" class="form-control" name='phonenumber' />
+                    <div class="invalid-feedback text-danger">Please enter a valid phone number.</div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="addressLine1">Address Line 1</label>
+                    <input type="text" id="addressLine1" class="form-control" name='addressLine1' />
+                    <div class="invalid-feedback text-danger">Please enter address line 1.</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="addressLine2">Address Line 2</label>
+                    <input type="text" id="addressLine2" class="form-control" name='addressLine2' />
+                    <div class="invalid-feedback text-danger">Please enter address line 2.</div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="country">Country</label>
+                    <select id="country" class="form-control" name="country" >
+                        <option value="">Select Country</option>
+                    </select>
+                    <div class="invalid-feedback text-danger">Please enter a country.</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="state">State</label>
+                    <select id="state" class="form-control" name="state" >
+                        <option value="">Select state</option>
+                    </select>
+                    <div class="invalid-feedback text-danger">Please enter a state.</div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="city">City</label>
+                    <select id="city" class="form-control" name="city" >
+                        <option value="">Select city</option>
+                    </select>
+                    <div class="invalid-feedback text-danger">Please enter a city.</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="picture">Picture</label>
+                    <input type="file" id="picture" name='picture' class="form-control" />
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-outline mb-4">
+                    <label class="form-label" for="role">Role</label>
+                    <div class="form-check">
+                        <label class="form-check-label" for="adminRole">Admin</label>
+                        <input class="form-check-input" type="radio" name="role" id="adminRole" value="admin">
+                    </div>
+                    <div class="form-check">
+                        <label class="form-check-label" for="userRole">User</label>
+                        <input class="form-check-input" type="radio" name="role" id="userRole" value="user">
+                    </div>
+                    <div class="invalid-feedback text-danger" id="roleError" style="display: none;">Please select a role.</div>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn">Submit</button>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+    const apiKey = 'UzJGVjJRVVBjMk9tdmpvSktGRWg2VnFGS1FjOFg4aFNOS3pLWHhYbw==';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchCountries();
+
+        document.getElementById('country').addEventListener('change', function() {
+            fetchStates(this.value);
+        });
+
+        document.getElementById('state').addEventListener('change', function() {
+            fetchCities(this.value);
+        });
+    });
+
+    const fetchCountries = () => {
+        console.log('Fetching countries...');
+        var headers = new Headers();
+        headers.append("X-CSCAPI-KEY", apiKey);
+
+        var requestOptions = {
+            method: 'GET',
+            headers: headers,
+            redirect: 'follow'
+        };
+
+        fetch("https://api.countrystatecity.in/v1/countries", requestOptions)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Countries data:', data);
+                const countrySelect = document.getElementById('country');
+                if (Array.isArray(data)) {
+                    data.forEach(country => {
+                        const option = document.createElement('option');
+                        option.value = country.iso2; // Use ISO2 code for fetching states
+                        option.textContent = country.name;
+                        countrySelect.appendChild(option);
+                    });
+                } else {
+                    console.error('Unexpected data format:', data);
+                }
+            })
+            .catch(error => console.error('Error fetching countries:', error));
+    };
+
+    const fetchStates = (countryIso2, selectedState = '') => {
+        console.log(`Fetching states for country: ${countryIso2}`);
+        var headers = new Headers();
+        headers.append("X-CSCAPI-KEY", apiKey);
+
+        var requestOptions = {
+            method: 'GET',
+            headers: headers,
+            redirect: 'follow'
+        };
+
+        fetch(`https://api.countrystatecity.in/v1/countries/${countryIso2}/states`, requestOptions)
+            .then(response => response.json())
+            .then(data => {
+                console.log('States data:', data);
+                const stateSelect = document.getElementById('state');
+                stateSelect.innerHTML = '<option value="">Select State</option>';
+                if (Array.isArray(data)) {
+                    data.forEach(state => {
+                        const option = document.createElement('option');
+                        option.value = state.iso2; // Use ISO2 code for fetching cities
+                        option.textContent = state.name;
+                        if (state.iso2 === selectedState) {
+                            option.selected = true;
+                        }
+                        stateSelect.appendChild(option);
+                    });
+                } else {
+                    console.error('Unexpected data format:', data);
+                }
+            })
+            .catch(error => console.error('Error fetching states:', error));
+    };
+
+    const fetchCities = (stateIso2, selectedCity = '') => {
+        const countryIso2 = document.getElementById('country').value;
+        console.log(`Fetching cities for state: ${stateIso2}`);
+        var headers = new Headers();
+        headers.append("X-CSCAPI-KEY", apiKey);
+
+        var requestOptions = {
+            method: 'GET',
+            headers: headers,
+            redirect: 'follow'
+        };
+
+        fetch(`https://api.countrystatecity.in/v1/countries/${countryIso2}/states/${stateIso2}/cities`, requestOptions)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Cities data:', data);
+                const citySelect = document.getElementById('city');
+                citySelect.innerHTML = '<option value="">Select City</option>';
+                if (Array.isArray(data)) {
+                    data.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city.name;
+                        option.textContent = city.name;
+                        if (city.name === selectedCity) {
+                            option.selected = true;
+                        }
+                        citySelect.appendChild(option);
+                    });
+                } else {
+                    console.error('Unexpected data format:', data);
+                }
+            })
+            .catch(error => console.error('Error fetching cities:', error));
+    };
+
+    document.getElementById("registerForm").addEventListener("submit", async function (event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        // Client-side validation
+        let isValid = true;
+        let firstInvalidElement = null;
+        const form = this;
+
+        // Validate each field
+        form.querySelectorAll("input, select").forEach(input => {
+            const errorDiv = input.nextElementSibling;
+            if (!input.value.trim()) {
+                input.classList.add("is-invalid");
+                if (errorDiv) {
+                    errorDiv.style.display = "block";
+                }
+                isValid = false;
+                if (!firstInvalidElement) {
+                    firstInvalidElement = input;
+                }
+            } else {
+                input.classList.remove("is-invalid");
+                if (errorDiv) {
+                    errorDiv.style.display = "none";
+                }
+            }
+        });
+
+        // Additional validations
+        const username = document.getElementById("username").value;
+        if (username.length < 3) {
+            const usernameInput = document.getElementById("username");
+            usernameInput.classList.add("is-invalid");
+            usernameInput.nextElementSibling.style.display = "block";
+            isValid = false;
+            if (!firstInvalidElement) {
+                firstInvalidElement = usernameInput;
+            }
+        } else {
+            const usernameInput = document.getElementById("username");
+            usernameInput.classList.remove("is-invalid");
+            usernameInput.nextElementSibling.style.display = "none";
+        }
+
+        const email = document.getElementById("email").value;
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+            const emailInput = document.getElementById("email");
+            emailInput.classList.add("is-invalid");
+            emailInput.nextElementSibling.style.display = "block";
+            isValid = false;
+            if (!firstInvalidElement) {
+                firstInvalidElement = emailInput;
+            }
+        } else {
+            const emailInput = document.getElementById("email");
+            emailInput.classList.remove("is-invalid");
+            emailInput.nextElementSibling.style.display = "none";
+        }
+
+        const phoneNumber = document.getElementById("phonenumber").value;
+        const phonePattern = /^[0-9]+$/;
+        if (!phonePattern.test(phoneNumber)) {
+            const phoneInput = document.getElementById("phonenumber");
+            phoneInput.classList.add("is-invalid");
+            phoneInput.nextElementSibling.style.display = "block";
+            isValid = false;
+            if (!firstInvalidElement) {
+                firstInvalidElement = phoneInput;
+            }
+        } else {
+            const phoneInput = document.getElementById("phonenumber");
+            phoneInput.classList.remove("is-invalid");
+            phoneInput.nextElementSibling.style.display = "none";
+        }
+
+        const dob = document.getElementById("dob").value;
+        const today = new Date().toISOString().split('T')[0];
+        if (dob >= today) {
+            const dobInput = document.getElementById("dob");
+            dobInput.classList.add("is-invalid");
+            dobInput.nextElementSibling.style.display = "block";
+            isValid = false;
+            if (!firstInvalidElement) {
+                firstInvalidElement = dobInput;
+            }
+        } else {
+            const dobInput = document.getElementById("dob");
+            dobInput.classList.remove("is-invalid");
+            dobInput.nextElementSibling.style.display = "none";
+        }
+
+        const password = document.getElementById("password").value;
+        const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordPattern.test(password)) {
+            const passwordInput = document.getElementById("password");
+            passwordInput.classList.add("is-invalid");
+            passwordInput.nextElementSibling.style.display = "block";
+            isValid = false;
+            if (!firstInvalidElement) {
+                firstInvalidElement = passwordInput;
+            }
+        } else {
+            const passwordInput = document.getElementById("password");
+            passwordInput.classList.remove("is-invalid");
+            passwordInput.nextElementSibling.style.display = "none";
+        }
+
+        const confirmPassword = document.getElementById("confirmpassword").value;
+        if (password !== confirmPassword) {
+            const confirmPasswordInput = document.getElementById("confirmpassword");
+            confirmPasswordInput.classList.add("is-invalid");
+            confirmPasswordInput.nextElementSibling.style.display = "block";
+            isValid = false;
+            if (!firstInvalidElement) {
+                firstInvalidElement = confirmPasswordInput;
+            }
+        } else {
+            const confirmPasswordInput = document.getElementById("confirmpassword");
+            confirmPasswordInput.classList.remove("is-invalid");
+            confirmPasswordInput.nextElementSibling.style.display = "none";
+        }
+
+        const addressLine2 = document.getElementById("addressLine2").value;
+        if (!addressLine2.trim()) {
+            const addressLine2Input = document.getElementById("addressLine2");
+            addressLine2Input.classList.add("is-invalid");
+            addressLine2Input.nextElementSibling.style.display = "block";
+            isValid = false;
+            if (!firstInvalidElement) {
+                firstInvalidElement = addressLine2Input;
+            }
+        } else {
+            const addressLine2Input = document.getElementById("addressLine2");
+            addressLine2Input.classList.remove("is-invalid");
+            addressLine2Input.nextElementSibling.style.display = "none";
+        }
+
+        // Validate radio buttons for gender and role
+        const genderSelected = document.querySelector('input[name="gender"]:checked');
+        const roleSelected = document.querySelector('input[name="role"]:checked');
+
+        if (!genderSelected) {
+            document.getElementById("genderError").style.display = "block";
+            isValid = false;
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.querySelector('input[name="gender"]');
+            }
+        } else {
+            document.getElementById("genderError").style.display = "none";
+        }
+
+        if (!roleSelected) {
+            document.getElementById("roleError").style.display = "block";
+            isValid = false;
+            if (!firstInvalidElement) {
+                firstInvalidElement = document.querySelector('input[name="role"]');
+            }
+        } else {
+            document.getElementById("roleError").style.display = "none";
+        }
+
+        if (!isValid) {
+            if (firstInvalidElement) {
+                firstInvalidElement.focus();
+            }
+            return;
+        }
+
+        const formData = new FormData(this);
+        console.log("Form data:", Array.from(formData.entries())); // Debugging: Log form data
+
+        try {
+            const response = await fetch("/register", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (response.ok) {
+                window.location.href = "/login"; // Redirect to the login page
+            } else {
+                const errorData = await response.json();
+                alert(errorData.message);
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("An error occurred. Please try again later!");
+        }
+    });
+</script>
+
+{% endblock %}

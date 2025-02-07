@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}User Dashboard{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" type="text/css" href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/css/bootstrap-extended.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.5.5/css/simple-line-icons.min.css">
+<link rel="stylesheet" type="text/css" href="https://pixinvent.com/stack-responsive-bootstrap-4-admin-template/app-assets/css/colors.min.css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
+
+<div class="container categories">
+    <section id="minimal-statistics">
+        <div class="row">
+            <div class="col-12 mt-3 mb-1">
+                <h4 class="text-uppercase text-center my-5">User Dashboard</h4>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card h-100 text-center card-hover" onclick="location.href='/my_bookings';" style="cursor: pointer;">
+                    <div class="card-content">
+                        <div class="card-body">
+                            <div class="media d-flex flex-column align-items-center">
+                                <div class="align-self-center">
+                                    <i class="icon-graph primary font-large-2" style="font-size: 60px;"></i>
+                                </div>
+                                <div class="media-body">
+                                    <h5 class="mt-2">My Bookings</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card h-100 text-center card-hover" onclick="location.href='/book_car';" style="cursor: pointer;">
+                    <div class="card-content">
+                        <div class="card-body">
+                            <div class="media d-flex flex-column align-items-center">
+                                <div class="align-self-center">
+                                    <i class="icon-plus primary font-large-2" style="font-size: 60px;"></i>
+                                </div>
+                                <div class="media-body">
+                                    <h5 class="mt-2">Book a Car</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card h-100 text-center card-hover" onclick="location.href='/account';" style="cursor: pointer;">
+                    <div class="card-content">
+                        <div class="card-body">
+                            <div class="media d-flex flex-column align-items-center">
+                                <div class="align-self-center">
+                                    <i class="icon-user success font-large-2" style="font-size: 60px;"></i>
+                                </div>
+                                <div class="media-body">
+                                    <h5 class="mt-2">My Account</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card h-100 text-center card-hover" onclick="location.href='/change_pswd';" style="cursor: pointer;">
+                    <div class="card-content">
+                        <div class="card-body">
+                            <div class="media d-flex flex-column align-items-center">
+                                <div class="align-self-center">
+                                    <i class="icon-pencil primary font-large-2" style="font-size: 60px;"></i>
+                                </div>
+                                <div class="media-body">
+                                    <h5 class="mt-2">Change Password</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row m-3">
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card h-100 text-center card-hover" onclick="location.href='/logout';" style="cursor: pointer;">
+                    <div class="card-content">
+                        <div class="card-body">
+                            <div class="media d-flex flex-column align-items-center">
+                                <div class="align-self-center">
+                                    <i class="icon-rocket danger font-large-2" style="font-size: 60px;"></i>
+                                </div>
+                                <div class="media-body">
+                                    <h5 class="mt-2">Logout</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<style>
+    .card-hover:hover {
+        background: rgba(0, 0, 0, 0.05);
+        transition: background 0.3s ease;
+    }
+    .card {
+        height: 100%;
+    }
+</style>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+{% endblock %}

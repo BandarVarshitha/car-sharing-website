@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Company Reports{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-center mb-4">Company Reports</h3>
+    <div id="noCompaniesMessage" class="alert alert-info text-center" style="display: none;">
+        No companies found.
+    </div>
+    <div id="companiesTableContainer" style="display: none;">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered mt-4">
+                <thead id="companiesTableHead" class="thead-dark" style="display: none;">
+                    <tr>
+                        <th>Company ID</th>
+                        <th>Company Name</th>
+                        <th>Company Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="companiesTableBody">
+                    <!-- Company rows will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <nav id="paginationContainer" style="display: none;">
+        <ul class="pagination justify-content-center" id="paginationControls"></ul>
+    </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const companiesTableBody = document.getElementById('companiesTableBody');
+    const noCompaniesMessage = document.getElementById('noCompaniesMessage');
+    const companiesTableContainer = document.getElementById('companiesTableContainer');
+    const companiesTableHead = document.getElementById('companiesTableHead');
+    const paginationContainer = document.getElementById('paginationContainer');
+    let currentPage = 1;
+
+    async function loadCompanies(page = 1) {
+        try {
+            const response = await fetch(`/api/companies?page=${page}`);
+            const data = await response.json();
+            companiesTableBody.innerHTML = '';
+            if (data.companies.length > 0) {
+                noCompaniesMessage.style.display = 'none';
+                companiesTableContainer.style.display = 'block';
+                companiesTableHead.style.display = 'table-header-group';
+                paginationContainer.style.display = 'block';
+
+                data.companies.forEach(company => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${company.company_id}</td>
+                        <td>${company.company_name}</td>
+                        <td>${company.company_description}</td>
+                        <td>
+                            <div>
+                                <a href="/edit_company/${company.company_id}" class="btn btn-sm btn-primary m-1">Edit</a>
+                                <button class="btn btn-sm btn-danger m-1" onclick="deleteCompany(${company.company_id})">Delete</button>
+                            </div>
+                        </td>
+                    `;
+                    companiesTableBody.appendChild(tr);
+                });
+
+                // Update pagination controls
+                const paginationControls = document.getElementById('paginationControls');
+                paginationControls.innerHTML = '';
+                const totalPages = Math.ceil(data.total / data.per_page);
+
+                const prevLi = document.createElement('li');
+                prevLi.className = `page-item ${page === 1 ? 'disabled' : ''}`;
+                prevLi.innerHTML = `<a class="page-link" href="#" onclick="loadCompanies(${page - 1})">Previous</a>`;
+                paginationControls.appendChild(prevLi);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageLi = document.createElement('li');
+                    pageLi.className = `page-item ${i === page ? 'active' : ''}`;
+                    pageLi.innerHTML = `<a class="page-link" href="#" onclick="loadCompanies(${i})">${i}</a>`;
+                    paginationControls.appendChild(pageLi);
+                }
+
+                const nextLi = document.createElement('li');
+                nextLi.className = `page-item ${page === totalPages ? 'disabled' : ''}`;
+                nextLi.innerHTML = `<a class="page-link" href="#" onclick="loadCompanies(${page + 1})">Next</a>`;
+                paginationControls.appendChild(nextLi);
+            } else {
+                noCompaniesMessage.style.display = 'block';
+                companiesTableContainer.style.display = 'none';
+                paginationContainer.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error fetching companies:', error);
+        }
+    }
+
+    window.loadCompanies = loadCompanies;
+
+    async function deleteCompany(companyId) {
+        if (confirm('Are you sure you want to delete this company?')) {
+            try {
+                const response = await fetch(`/delete_company/${companyId}`, { method: 'POST' });
+                if (response.ok) {
+                    loadCompanies(currentPage);
+                } else {
+                    alert('Error deleting company.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        }
+    }
+
+    window.deleteCompany = deleteCompany;
+
+    loadCompanies();
+});
+</script>
+{% endblock %}

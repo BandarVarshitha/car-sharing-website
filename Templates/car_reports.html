@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Car Reports{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-center mb-4">Car Reports</h3>
+    <div id="noCarsMessage" class="alert alert-info text-center" style="display: none;">
+        No cars found.
+    </div>
+    <div id="carsTableContainer" style="display: none;">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead id="carsTableHead" class="table-dark" style="display: none;">
+                    <tr>
+                        <th>Car ID</th>
+                        <th>Car Image</th>
+                        <th>Car Name</th>
+                        <th>Company</th>
+                        <th>Type</th>
+                        <th>Price per Day</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="carsTableBody">
+                    <!-- Car rows will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <nav id="paginationContainer" style="display: none;">
+        <ul class="pagination justify-content-center" id="paginationControls"></ul>
+    </nav>
+</div>
+
+<!-- Car Details Modal -->
+<div class="modal fade" id="carDetailsModal" tabindex="-1" aria-labelledby="carDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="carDetailsModalLabel">Car Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="carDetailsContent">
+                    <!-- Car details will be loaded here dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const carsTableBody = document.getElementById('carsTableBody');
+    const noCarsMessage = document.getElementById('noCarsMessage');
+    const carsTableContainer = document.getElementById('carsTableContainer');
+    const carsTableHead = document.getElementById('carsTableHead');
+    const paginationContainer = document.getElementById('paginationContainer');
+    let currentPage = 1;
+
+    async function loadCars(page = 1) {
+        try {
+            const response = await fetch(`/api/cars?page=${page}`);
+            const data = await response.json();
+            carsTableBody.innerHTML = '';
+            if (data.cars.length > 0) {
+                noCarsMessage.style.display = 'none';
+                carsTableContainer.style.display = 'block';
+                carsTableHead.style.display = 'table-header-group';
+                paginationContainer.style.display = 'block';
+
+                data.cars.forEach(car => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${car.car_id}</td>
+                        <td>
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#carDetailsModal" data-car-id="${car.car_id}">
+                                <img src="/static/uploads/${car.image_url}" alt="Car Image" style="width: 100px; height: 75px;">
+                            </a>
+                        </td>
+                        <td>${car.car_name}</td>
+                        <td>${car.company_name}</td>
+                        <td>${car.type_name}</td>
+                        <td>${car.price_per_day}</td>
+                        <td>
+                            <div>
+                                <button class="btn btn-primary m-1" onclick="viewCarDetails(${car.car_id})">View</button>
+                                <button class="btn btn-warning m-1"><a href="/edit_car/${car.car_id}" class="text-decoration-none text-white">Edit</a></button>
+                                <button class="btn btn-danger m-1" onclick="deleteCar(${car.car_id})">Delete</button>
+                            </div>
+                        </td>
+                    `;
+                    carsTableBody.appendChild(tr);
+                });
+
+                // Update pagination controls
+                const paginationControls = document.getElementById('paginationControls');
+                paginationControls.innerHTML = '';
+                const totalPages = Math.ceil(data.total / data.per_page);
+
+                const prevLi = document.createElement('li');
+                prevLi.className = `page-item ${page === 1 ? 'disabled' : ''}`;
+                prevLi.innerHTML = `<a class="page-link" href="#" onclick="loadCars(${page - 1})">Previous</a>`;
+                paginationControls.appendChild(prevLi);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageLi = document.createElement('li');
+                    pageLi.className = `page-item ${i === page ? 'active' : ''}`;
+                    pageLi.innerHTML = `<a class="page-link" href="#" onclick="loadCars(${i})">${i}</a>`;
+                    paginationControls.appendChild(pageLi);
+                }
+
+                const nextLi = document.createElement('li');
+                nextLi.className = `page-item ${page === totalPages ? 'disabled' : ''}`;
+                nextLi.innerHTML = `<a class="page-link" href="#" onclick="loadCars(${page + 1})">Next</a>`;
+                paginationControls.appendChild(nextLi);
+            } else {
+                noCarsMessage.style.display = 'block';
+                carsTableContainer.style.display = 'none';
+                paginationContainer.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error fetching cars:', error);
+        }
+    }
+
+    window.loadCars = loadCars;
+
+    async function deleteCar(carId) {
+        if (confirm('Are you sure you want to delete this car?')) {
+            try {
+                const response = await fetch(`/delete_car/${carId}`, { method: 'POST' });
+                if (response.ok) {
+                    loadCars(currentPage);
+                } else {
+                    alert('Error deleting car.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        }
+    }
+
+    window.deleteCar = deleteCar;
+
+    async function viewCarDetails(carId) {
+        try {
+            const response = await fetch(`/car_details/${carId}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const car = await response.json();
+            const carDetailsContent = document.getElementById('carDetailsContent');
+            carDetailsContent.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <img src="${car.image_url}" class="img-fluid" alt="Car Image">
+                    </div>
+                    <div class="col-md-6">
+                        <h3>${car.car_name}</h3>
+                        <p><strong>Car ID:</strong> ${car.car_id}</p>
+                        <p><strong>Car Number:</strong> ${car.car_number}</p>
+                        <p><strong>Company:</strong> ${car.company_name}</p>
+                        <p><strong>Type:</strong> ${car.type_name}</p>
+                        <p><strong>Stock:</strong> ${car.stock}</p>
+                        <p><strong>Price per Day:</strong> $${car.price_per_day}</p>
+                        <p><strong>From Location:</strong> ${car.from_location}</p>
+                        <p><strong>To Location:</strong> ${car.to_location}</p>
+                    </div>
+                </div>
+            `;
+            const carDetailsModal = new bootstrap.Modal(document.getElementById('carDetailsModal'));
+            carDetailsModal.show();
+        } catch (error) {
+            console.error('Error fetching car details:', error);
+            alert('An error occurred. Please try again later.');
+        }
+    }
+
+    window.viewCarDetails = viewCarDetails;
+
+    loadCars();
+});
+</script>
+{% endblock %}

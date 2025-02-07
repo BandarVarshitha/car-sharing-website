@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Booking Report{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-center mb-4">Booking Report</h3>
+    <div id="noBookingsMessage" class="alert alert-info text-center" style="display: none;">
+        No bookings found.
+    </div>
+    <div id="bookingsTableContainer" class="mt-4" style="display: none;">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead id="bookingsTableHead" class="table-dark" style="display: none;">
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Car Name</th>
+                        <th>Car Image</th>
+                        <th>Booking Period</th>
+                        <th>Booking Location</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingsTableBody">
+                    {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.booking_id }}</td>
+                        <td>{{ booking.car_name }}</td>
+                        <td>
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#bookingDetailsModal" data-booking-id="{{ booking.booking_id }}">
+                                <img src="{{ url_for('static', filename='uploads/' ~ booking.car_image_url) }}" 
+                                     alt="Car Image" 
+                                     class="img-fluid rounded" 
+                                     style="width: 100px; height: 75px; object-fit: cover;">
+                            </a>
+                        </td>
+                        <td>{{ booking.booking_period }}</td>
+                        <td>{{ booking.booking_location }}</td>
+                        <td>${{ booking.price_per_day }}</td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary btn-sm text-white text-decoration-none" data-bs-toggle="modal" data-bs-target="#bookingDetailsModal" onclick="loadBookingDetails({{ booking.booking_id }})">
+                                    View
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteBooking({{ booking.booking_id }})">
+                                    Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Details Modal -->
+<div class="modal fade" id="bookingDetailsModal" tabindex="-1" aria-labelledby="bookingDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookingDetailsModalLabel">Booking Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-center mb-3">
+                    <button class="btn btn-outline-primary me-2" id="carDetailsBtn">Car Details</button>
+                    <button class="btn btn-outline-primary" id="userDetailsBtn">User Details</button>
+                </div>
+                <div id="booking-details-content">
+                    <!-- Booking details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function loadBookingDetails(bookingId) {
+        fetch(`/api/booking_details/${bookingId}`)
+            .then(response => response.json())
+            .then(data => {
+                const bookingDetailsContent = document.getElementById('booking-details-content');
+                bookingDetailsContent.innerHTML = `
+                    <div id="car-details" class="details-section">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="card shadow-sm border-0 h-100">
+                                    <img src="${data.car_image_url}" class="card-img-top rounded-top" alt="Car Image">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-primary">${data.car_name}</h5>
+                                        <p class="card-text mb-1"><strong>Car ID:</strong> ${data.car_id}</p>
+                                        <p class="card-text mb-1"><strong>Car Number:</strong> ${data.car_number}</p>
+                                        <p class="card-text mb-1"><strong>Company:</strong> ${data.company_name}</p>
+                                        <p class="card-text mb-1"><strong>Type:</strong> ${data.car_type}</p>
+                                        <p class="card-text mb-1"><strong>Price per Day:</strong> <span class="text-success">$${data.price_per_day}</span></p>
+                                        <p class="card-text mb-1"><strong>From Location:</strong> ${data.from_location}</p>
+                                        <p class="card-text"><strong>To Location:</strong> ${data.to_location}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="user-details" class="details-section" style="display: none;">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="card shadow-sm border-0 h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-primary">Customer Details</h5>
+                                        <p class="card-text mb-1"><strong>Name:</strong> ${data.customer_name}</p>
+                                        <p class="card-text mb-1"><strong>Email:</strong> <a href="mailto:${data.email}" class="text-decoration-none">${data.email}</a></p>
+                                        <p class="card-text mb-1"><strong>Contact Number:</strong> ${data.owner_phone_number}</p>
+                                        <p class="card-text mb-1"><strong>Booking Period:</strong> ${data.booking_period}</p>
+                                        <p class="card-text"><strong>Booking Location:</strong> ${data.booking_location}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('carDetailsBtn').addEventListener('click', function() {
+                    document.getElementById('car-details').style.display = 'block';
+                    document.getElementById('user-details').style.display = 'none';
+                });
+
+                document.getElementById('userDetailsBtn').addEventListener('click', function() {
+                    document.getElementById('car-details').style.display = 'none';
+                    document.getElementById('user-details').style.display = 'block';
+                });
+            })
+            .catch(error => console.error('Error fetching booking details:', error));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const bookingsTableBody = document.getElementById('bookingsTableBody');
+        const noBookingsMessage = document.getElementById('noBookingsMessage');
+        const bookingsTableContainer = document.getElementById('bookingsTableContainer');
+        const bookingsTableHead = document.getElementById('bookingsTableHead');
+
+        if (bookingsTableBody.children.length > 0) {
+            noBookingsMessage.style.display = 'none';
+            bookingsTableContainer.style.display = 'block';
+            bookingsTableHead.style.display = 'table-header-group';
+        } else {
+            noBookingsMessage.style.display = 'block';
+            bookingsTableContainer.style.display = 'none';
+        }
+    });
+
+    async function deleteBooking(bookingId) {
+        if (confirm('Are you sure you want to delete this booking?')) {
+            try {
+                const response = await fetch(`/delete_booking/${bookingId}`, { method: 'POST' });
+                if (response.ok) {
+                    location.reload(); // Reload the page to reflect the changes
+                } else {
+                    alert('Error deleting booking.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        }
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+{% endblock %}

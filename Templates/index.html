@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Car Sharing{% endblock %}
+
+{% block content %}
+  
+<section class="hero">
+    <div class="hero-content visible">
+        <h1>Welcome to Car Sharing</h1>
+        <p>Experience the best car sharing service with us.</p>
+        <button class="btn">Learn More</button>
+    </div>
+</section>
+
+<div class="features">
+  <div class="feature">
+    <h2>Wide Range of Cars</h2>
+    <p>Choose from a variety of cars to suit your needs and preferences.</p>
+  </div>
+  <div class="feature">
+    <h2>Affordable Prices</h2>
+    <p>Enjoy competitive pricing and great value for your money.</p>
+  </div>
+  <div class="feature">
+    <h2>24/7 Support</h2>
+    <p>Our support team is available around the clock to assist you.</p>
+  </div>
+</div>
+
+<div class="about-me">
+    <img src="../static/images/car1.webp" alt="Profile Picture">
+    <div class="about-me-content">
+        <h2>About Me</h2>
+        <p>Hello! I'm the founder of Car Sharing. I have a passion for cars and believe in providing the best car sharing experience for everyone. Join us and enjoy the ride!</p>
+    </div>
+</div>
+
+<h2 style="text-align: center; margin-top: 40px;">Top Picked Cars</h2>
+<div class="top-picks">
+    <div class="row justify-content-center">
+        {% set displayed_car_ids = [] %}
+        {% for car in top_picked_cars %}
+            {% if car.car_id not in displayed_car_ids %}
+                {% set displayed_car_ids = displayed_car_ids + [car.car_id] %}
+                <div class="col-12 col-md-4 mb-4">
+                    <div class="card h-100 border-0 position-relative shadow-sm">
+                        <!-- Image Section -->
+                        <img src="{{ car.image_url }}" 
+                             class="card-img-top object-fit-cover rounded" 
+                             alt="Top Pick {{ car.car_id }}" 
+                             style="height: 200px; object-fit: cover;" 
+                             onerror="this.onerror=null;this.src='../static/images/no_image_available.png';">
+                
+                        <!-- Card Body -->
+                        <div class="card-body text-center">
+                            <h6 class="card-title mb-2">{{ car.car_name }}</h6>
+                            <p class="card-text mb-1 text-muted">{{ car.company_name }}</p>
+                            <p class="card-text text-muted">{{ car.type_name }}</p>
+                            <a href="{{ url_for('book_car_confirm', car_id=car.car_id) }}" 
+                               class="btn btn-primary mt-2 border-0">
+                                Book this car
+                            </a>
+                        </div>
+                
+                        <!-- Price Overlay -->
+                        <div class="price-overlay position-absolute top-0 end-0 bg-orange text-white p-2 rounded-start">
+                            ${{ car.price_per_day }}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<h2 style="text-align: center; margin-top: 40px;">Latest Added Cars</h2>
+<div class="latest-cars">
+    <div class="row justify-content-center">
+        {% for car in latest_added_cars %}
+        <div class="col-6 col-md-2 mb-4">
+            <a href="{{ url_for('car_details', car_id=car.car_id) }}" data-bs-toggle="modal" data-bs-target="#carDetailsModal" data-car-id="{{ car.car_id }}">
+                <img src="{{ car.image_url }}" class="img-fluid rounded shadow-sm" alt="Latest Car {{ car.car_id }}" style="height: 200px; object-fit: cover;" onerror="this.onerror=null;this.src='../static/images/no_image_available.png';">
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Car Details Modal -->
+<div class="modal fade" id="carDetailsModal" tabindex="-1" aria-labelledby="carDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="carDetailsModalLabel">Car Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="carDetailsContent">
+                    <!-- Car details will be loaded here dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="bookNowButton" class="btn btn-primary">Book Now</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .price-overlay {
+        font-size: 0.85rem;
+        font-weight: bold;
+        background-color: #e03e00;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const carDetailsModal = document.getElementById('carDetailsModal');
+    carDetailsModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const carId = button.getAttribute('data-car-id');
+        fetch(`/car_details/${carId}`)
+            .then(response => response.json())
+            .then(car => {
+                const carDetailsContent = document.getElementById('carDetailsContent');
+                carDetailsContent.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <img src="${car.image_url}" class="img-fluid" alt="Car Image">
+                        </div>
+                        <div class="col-md-6">
+                            <h3>${car.car_name}</h3>
+                            <p><strong>Car ID:</strong> ${car.car_id}</p>
+                            <p><strong>Car Number:</strong> ${car.car_number}</p>
+                            <p><strong>Company:</strong> ${car.company_name}</p>
+                            <p><strong>Type:</strong> ${car.type_name}</p>
+                            <p><strong>Stock:</strong> ${car.stock}</p>
+                            <p><strong>Price per Day:</strong> $${car.price_per_day}</p>
+                            <p><strong>From Location:</strong> ${car.from_location}</p>
+                            <p><strong>To Location:</strong> ${car.to_location}</p>
+                        </div>
+                    </div>
+                `;
+                const bookNowButton = document.getElementById('bookNowButton');
+                bookNowButton.href = `/book_car_confirm/${car.car_id}`;
+            })
+            .catch(error => {
+                console.error('Error fetching car details:', error);
+                alert('An error occurred. Please try again later.');
+            });
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Add/Edit Company{% endblock %}
+
+{% block content %}
+<div class="add-company-form container mt-5 shadow-lg p-5 mb-5 bg-white rounded">
+    <h3 class="text-center mb-4 text-primary font-weight-bold">{% if company %}Edit{% else %}Add{% endif %} Company</h3>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert-container mb-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <strong>{{ message }}</strong>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <form method="POST" class="mt-4" id="addCompanyForm" novalidate>
+        <div class="form-outline mb-4">
+            <label class="form-label" for="company_name">Company Name</label>
+            <input type="text" id="company_name" class="form-control form-control-lg" name="company_name" value="{{ company.company_name if company else '' }}" required />
+            <div class="text-danger" id="company_name_error"></div>
+        </div>
+        
+        <div class="form-outline mb-4">
+            <label class="form-label" for="company_description">Company Description</label>
+            <textarea id="company_description" class="form-control form-control-lg" name="company_description" required>{{ company.company_description if company else '' }}</textarea>
+            <div class="text-danger" id="company_description_error"></div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-lg w-100 py-3">Save</button>
+    </form>
+</div>
+
+
+<script>
+document.getElementById('addCompanyForm').addEventListener('submit', function(event) {
+    var isValid = true;
+    var firstInvalidElement = null;
+
+    var companyName = document.getElementById('company_name').value;
+    var companyDescription = document.getElementById('company_description').value;
+
+    if (!companyName) {
+        isValid = false;
+        document.getElementById('company_name_error').innerText = "Company name is required.";
+        if (!firstInvalidElement) {
+            firstInvalidElement = document.getElementById('company_name');
+        }
+    } else {
+        document.getElementById('company_name_error').innerText = "";
+    }
+
+    if (!companyDescription) {
+        isValid = false;
+        document.getElementById('company_description_error').innerText = "Company description is required.";
+        if (!firstInvalidElement) {
+            firstInvalidElement = document.getElementById('company_description');
+        }
+    } else {
+        document.getElementById('company_description_error').innerText = "";
+    }
+
+    if (!isValid) {
+        event.preventDefault();
+        if (firstInvalidElement) {
+            firstInvalidElement.focus();
+        }
+    }
+});
+</script>
+{% endblock %}

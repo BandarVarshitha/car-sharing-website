@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Payment{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-center mb-4">Payment Details</h3>
+    <div class="row box-shadow">
+        <div class="col-md-12">
+            <h4 class="text-center mb-3">Booking Summary</h4>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <p class="card-text"><strong>Pickup Date:</strong> {{ pickup_date }}</p>
+                    <p class="card-text"><strong>Dropoff Date:</strong> {{ dropoff_date }}</p>
+                    <p class="card-text"><strong>Total Days:</strong> {{ total_days }}</p>
+                    <p class="card-text"><strong>Price per Day:</strong> ${{ car.price_per_day }}</p>
+                    <p class="card-text"><strong>Total Amount:</strong> ${{ total_amount / 100 }}</p>
+                </div>
+            </div>
+            <form id="paymentForm" method="POST" action="{{ url_for('payment') }}">
+                <input type="hidden" name="amount" value="{{ total_amount }}">
+                <button type="submit" class="btn btn-success">Proceed to Payment</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<style>
+    .form-label {
+        font-weight: bold;
+    }
+    .box-shadow {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        border-radius: 10px;
+        background-color: #fff;
+    }
+    .container {
+        margin-bottom: 20px;
+    }
+    .car-image {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

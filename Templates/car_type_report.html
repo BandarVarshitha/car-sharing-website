@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Car Type Reports{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-center mb-4">Car Type Reports</h3>
+    <div id="noCarTypesMessage" class="alert alert-info text-center" style="display: none;">
+        No car types found.
+    </div>
+    <div id="carTypesTableContainer" style="display: none;">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered mt-4">
+                <thead id="carTypesTableHead" class="thead-dark" style="display: none;">
+                    <tr>
+                        <th>Type ID</th>
+                        <th>Type Name</th>
+                        <th>Type Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="carTypesTableBody">
+                    <!-- Car type rows will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <nav id="paginationContainer" style="display: none;">
+        <ul class="pagination justify-content-center" id="paginationControls"></ul>
+    </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const carTypesTableBody = document.getElementById('carTypesTableBody');
+    const noCarTypesMessage = document.getElementById('noCarTypesMessage');
+    const carTypesTableContainer = document.getElementById('carTypesTableContainer');
+    const carTypesTableHead = document.getElementById('carTypesTableHead');
+    const paginationContainer = document.getElementById('paginationContainer');
+    let currentPage = 1;
+
+    async function loadCarTypes(page = 1) {
+        try {
+            const response = await fetch(`/api/car_types?page=${page}`);
+            const data = await response.json();
+            carTypesTableBody.innerHTML = '';
+            if (data.car_types.length > 0) {
+                noCarTypesMessage.style.display = 'none';
+                carTypesTableContainer.style.display = 'block';
+                carTypesTableHead.style.display = 'table-header-group';
+                paginationContainer.style.display = 'block';
+
+                data.car_types.forEach(carType => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${carType.type_id}</td>
+                        <td>${carType.type_name}</td>
+                        <td>${carType.type_description}</td>
+                        <td>
+                            <div>
+                                <a href="/edit_car_type/${carType.type_id}" class="btn btn-sm btn-primary m-1">Edit</a>
+                                <button class="btn btn-sm btn-danger m-1" onclick="deleteCarType(${carType.type_id})">Delete</button>
+                            </div>
+                        </td>
+                    `;
+                    carTypesTableBody.appendChild(tr);
+                });
+
+                // Update pagination controls
+                const paginationControls = document.getElementById('paginationControls');
+                paginationControls.innerHTML = '';
+                const totalPages = Math.ceil(data.total / data.per_page);
+
+                const prevLi = document.createElement('li');
+                prevLi.className = `page-item ${page === 1 ? 'disabled' : ''}`;
+                prevLi.innerHTML = `<a class="page-link" href="#" onclick="loadCarTypes(${page - 1})">Previous</a>`;
+                paginationControls.appendChild(prevLi);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageLi = document.createElement('li');
+                    pageLi.className = `page-item ${i === page ? 'active' : ''}`;
+                    pageLi.innerHTML = `<a class="page-link" href="#" onclick="loadCarTypes(${i})">${i}</a>`;
+                    paginationControls.appendChild(pageLi);
+                }
+
+                const nextLi = document.createElement('li');
+                nextLi.className = `page-item ${page === totalPages ? 'disabled' : ''}`;
+                nextLi.innerHTML = `<a class="page-link" href="#" onclick="loadCarTypes(${page + 1})">Next</a>`;
+                paginationControls.appendChild(nextLi);
+            } else {
+                noCarTypesMessage.style.display = 'block';
+                carTypesTableContainer.style.display = 'none';
+                paginationContainer.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error fetching car types:', error);
+        }
+    }
+
+    window.loadCarTypes = loadCarTypes;
+
+    async function deleteCarType(typeId) {
+        if (confirm('Are you sure you want to delete this car type?')) {
+            try {
+                const response = await fetch(`/delete_car_type/${typeId}`, { method: 'POST' });
+                if (response.ok) {
+                    loadCarTypes(currentPage);
+                } else {
+                    alert('Error deleting car type.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        }
+    }
+
+    window.deleteCarType = deleteCarType;
+
+    loadCarTypes();
+});
+</script>
+{% endblock %}

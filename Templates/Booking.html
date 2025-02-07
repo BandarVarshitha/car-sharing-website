@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Car Sharing{% endblock %}
+
+{% block content %}
+<div class="container col-7 mt-5">
+    <div class="row">
+        <div class="car-details col-md-5 p-4 text-white" style="background-color: #f87846;">
+            <h4 class="text-center">Car Details</h4>
+            <div class="img-container mb-3">
+                <img src="{{ url_for('static', filename='uploads/' ~ car.image_url) }}" class="img-fluid rounded-top car-image" alt="Car Image" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/no_image_available.png') }}';">
+            </div>
+            <p><strong>Car Name:</strong> {{ car.car_name }}</p>
+            <p><strong>Owner:</strong> {{ car.username }}</p>
+            <p><strong>Contact:</strong> {{ car.phone_number }}</p>
+            <p><strong>Type:</strong> {{ car.type_name }}</p>
+            <p><strong>Company:</strong> {{ car.company_name }}</p>
+            <p><strong>Price per day:</strong> ${{ car.price_per_day }}</p>
+            <p><strong>From:</strong> {{ car.from_location }}</p>
+            <p><strong>To:</strong> {{ car.to_location }}</p>
+        </div>
+        <div class="col-md-7 p-4">
+            <h4 class="text-center">Booking Details</h4>
+            <form id="bookingForm" method="POST" action="{{ url_for('add_booking_details', car_id=car.car_id) }}" novalidate onsubmit="return validateBookingForm()">
+                <div class="mb-2">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-control" name="customerName" value="{{ session['username'] }}" readonly>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" name="email" id="email" value="{{ session['email'] }}" readonly>
+                    <div class="invalid-feedback">Please enter a valid email.</div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Pickup Date</label>
+                    <input type="date" class="form-control" name="pickupDate" id="pickupDate" value="{{ pickup_date }}" >
+                    <div class="invalid-feedback">Please select a valid pickup date. The date cannot be in the past.</div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Drop Off Date</label>
+                    <input type="date" class="form-control" name="dropoffDate" id="dropoffDate" value="{{ dropoff_date }}">
+                    <div class="invalid-feedback">Please select a valid drop-off date. The date cannot be in the past.</div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Pickup Address</label>
+                    <input type="text" class="form-control" name="pickupAddress" id="pickupAddress">
+                    <div class="invalid-feedback">Please enter a valid pickup address.</div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Drop Off Address</label>
+                    <input type="text" class="form-control" name="dropoffAddress" id="dropoffAddress">
+                    <div class="invalid-feedback">Please enter a valid drop off address.</div>
+                </div>
+                <div class="d-flex justify-content-around">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="button" id="paymentLink" class="btn btn-success">Proceed to Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<style>
+    .form-label {
+        font-weight: bold;
+        font-size: 1rem;
+    }
+    .car-image {
+        width: 100%;
+        height: 150px;
+        object-fit: cover; /* Ensures image covers the box without distortion */
+        border-radius: 8px;
+    }
+    .invalid-feedback {
+        display: none;
+    }
+    .car-details {
+        margin-bottom: 2px;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const bookingForm = document.getElementById("bookingForm");
+        const paymentLink = document.getElementById("paymentLink");
+
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('pickupDate').setAttribute('min', today);
+        document.getElementById('dropoffDate').setAttribute('min', today);
+
+        bookingForm.addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            let valid = true;
+            let firstInvalidElement = null;
+
+            const email = document.getElementById('email').value;
+            const pickupDate = document.getElementById('pickupDate').value;
+            const dropoffDate = document.getElementById('dropoffDate').value;
+            const pickupAddress = document.getElementById('pickupAddress').value;
+            const dropoffAddress = document.getElementById('dropoffAddress').value;
+
+            if (!validateEmail(email)) {
+                valid = false;
+                const emailInput = document.getElementById('email');
+                emailInput.classList.add('is-invalid');
+                emailInput.nextElementSibling.style.display = 'block';
+                if (!firstInvalidElement) firstInvalidElement = emailInput;
+            } else {
+                const emailInput = document.getElementById('email');
+                emailInput.classList.remove('is-invalid');
+                emailInput.nextElementSibling.style.display = 'none';
+            }
+
+            if (!pickupDate) {
+                valid = false;
+                const pickupDateInput = document.getElementById('pickupDate');
+                pickupDateInput.classList.add('is-invalid');
+                pickupDateInput.nextElementSibling.style.display = 'block';
+                if (!firstInvalidElement) firstInvalidElement = pickupDateInput;
+            } else if (new Date(pickupDate) < new Date(today)) {
+                valid = false;
+                const pickupDateInput = document.getElementById('pickupDate');
+                pickupDateInput.classList.add('is-invalid');
+                pickupDateInput.nextElementSibling.style.display = 'block';
+                if (!firstInvalidElement) firstInvalidElement = pickupDateInput;
+            } else {
+                const pickupDateInput = document.getElementById('pickupDate');
+                pickupDateInput.classList.remove('is-invalid');
+                pickupDateInput.nextElementSibling.style.display = 'none';
+            }
+
+            if (!dropoffDate) {
+                valid = false;
+                const dropoffDateInput = document.getElementById('dropoffDate');
+                dropoffDateInput.classList.add('is-invalid');
+                dropoffDateInput.nextElementSibling.style.display = 'block';
+                if (!firstInvalidElement) firstInvalidElement = dropoffDateInput;
+            } else if (new Date(dropoffDate) < new Date(today)) {
+                valid = false;
+                const dropoffDateInput = document.getElementById('dropoffDate');
+                dropoffDateInput.classList.add('is-invalid');
+                dropoffDateInput.nextElementSibling.style.display = 'block';
+                if (!firstInvalidElement) firstInvalidElement = dropoffDateInput;
+            } else {
+                const dropoffDateInput = document.getElementById('dropoffDate');
+                dropoffDateInput.classList.remove('is-invalid');
+                dropoffDateInput.nextElementSibling.style.display = 'none';
+            }
+
+            if (!pickupAddress) {
+                valid = false;
+                const pickupAddressInput = document.getElementById('pickupAddress');
+                pickupAddressInput.classList.add('is-invalid');
+                pickupAddressInput.nextElementSibling.style.display = 'block';
+                if (!firstInvalidElement) firstInvalidElement = pickupAddressInput;
+            } else {
+                const pickupAddressInput = document.getElementById('pickupAddress');
+                pickupAddressInput.classList.remove('is-invalid');
+                pickupAddressInput.nextElementSibling.style.display = 'none';
+            }
+
+            if (!dropoffAddress) {
+                valid = false;
+                const dropoffAddressInput = document.getElementById('dropoffAddress');
+                dropoffAddressInput.classList.add('is-invalid');
+                dropoffAddressInput.nextElementSibling.style.display = 'block';
+                if (!firstInvalidElement) firstInvalidElement = dropoffAddressInput;
+            } else {
+                const dropoffAddressInput = document.getElementById('dropoffAddress');
+                dropoffAddressInput.classList.remove('is-invalid');
+                dropoffAddressInput.nextElementSibling.style.display = 'none';
+            }
+
+            if (valid) {
+                bookingForm.submit(); // Submit the form if all validations pass
+            } else if (firstInvalidElement) {
+                firstInvalidElement.focus();
+            }
+        });
+
+        paymentLink.addEventListener("click", function(event) {
+            event.preventDefault();
+            const pickupDate = document.getElementById('pickupDate').value;
+            const dropoffDate = document.getElementById('dropoffDate').value;
+            const carId = "{{ car.car_id }}";
+            const paymentUrl = "{{ url_for('payment_page', car_id=carId) }}?pickup_date=" + pickupDate + "&dropoff_date=" + dropoffDate;
+            window.location.href = paymentUrl;
+        });
+
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(String(email).toLowerCase());
+        }
+    });
+
+    function validateBookingForm() {
+        let valid = true;
+        const pickupDate = document.getElementById('pickupDate').value;
+        const dropoffDate = document.getElementById('dropoffDate').value;
+        const pickupAddress = document.getElementById('pickupAddress').value;
+        const dropoffAddress = document.getElementById('dropoffAddress').value;
+
+        if (!pickupDate) {
+            document.getElementById('pickup-date-error').textContent = 'Pickup date is required!';
+            valid = false;
+        } else {
+            document.getElementById('pickup-date-error').textContent = '';
+        }
+
+        if (!dropoffDate) {
+            document.getElementById('dropoff-date-error').textContent = 'Dropoff date is required!';
+            valid = false;
+        } else {
+            document.getElementById('dropoff-date-error').textContent = '';
+        }
+
+        if (!pickupAddress) {
+            document.getElementById('pickup-address-error').textContent = 'Pickup address is required!';
+            valid = false;
+        } else {
+            document.getElementById('pickup-address-error').textContent = '';
+        }
+
+        if (!dropoffAddress) {
+            document.getElementById('dropoff-address-error').textContent = 'Dropoff address is required!';
+            valid = false;
+        } else {
+            document.getElementById('dropoff-address-error').textContent = '';
+        }
+
+        return valid;
+    }
+</script>
