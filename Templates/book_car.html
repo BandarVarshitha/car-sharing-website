@@ -3,7 +3,7 @@
 {% block title %}Book Car{% endblock %}
 
 {% block content %}
-<div class="container  mt-5 ">
+<div class="container mt-5">
     <h3 class="text-center mb-4">Book Car</h3>
     <form method="POST" class="container col-lg-6 shadow p-5" action="{{ url_for('book_car') }}" onsubmit="return validateBookCarForm()">
         <div class="row">
@@ -26,7 +26,7 @@
             <div class="col-md-6">
                 <div class="form-outline mb-4">
                     <label class="form-label" for="from_location">From Location</label>
-                    <select id="from_location" class="form-control" name="from_location" >
+                    <select id="from_location" class="form-control" name="from_location">
                         <option value="">Select From Location</option>
                         {% for location in from_locations %}
                             <option value="{{ location.from_location }}" {% if location.from_location == from_location %}selected{% endif %}>{{ location.from_location }}</option>
@@ -38,7 +38,7 @@
             <div class="col-md-6">
                 <div class="form-outline mb-4">
                     <label class="form-label" for="to_location">To Location</label>
-                    <select id="to_location" class="form-control" name="to_location" >
+                    <select id="to_location" class="form-control" name="to_location">
                         <option value="">Select To Location</option>
                         {% for location in to_locations %}
                             <option value="{{ location.to_location }}" {% if location.to_location == to_location %}selected{% endif %}>{{ location.to_location }}</option>
@@ -57,7 +57,7 @@
             {% if available_cars %}
                 <div class="row" id="car-container">
                     {% for car in available_cars %}
-                        <div class="col col-lg-3 col-md-4  col-sm-6 mb-4 car-card position-relative" data-price="{{ car.price_per_day }}" data-company="{{ car.company_name }}" data-car-type="{{ car.type_name }}" data-location="{{ car.from_location }} {{ car.to_location }}">
+                        <div class="col col-lg-3 col-md-4 col-sm-6 mb-4 car-card position-relative" data-price="{{ car.price_per_day }}" data-company="{{ car.company_name }}" data-car-type="{{ car.type_name }}" data-location="{{ car.from_location }} {{ car.to_location }}">
                             <div class="card h-100 border-0">
                                 <img src="{{ url_for('static', filename='uploads/' ~ car.image_url) }}" class="card-img-top object-fit-cover rounded" alt="{{ car.car_name }}" style="height:200px; object-fit:cover;" onerror="this.onerror=null;this.src='../static/images/no_image_available.png';">
                                 <div class="card-body text-center">

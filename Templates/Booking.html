@@ -21,45 +21,43 @@
         </div>
         <div class="col-md-7 p-4">
             <h4 class="text-center">Booking Details</h4>
-            <form id="bookingForm" method="POST" action="{{ url_for('add_booking_details', car_id=car.car_id) }}" novalidate onsubmit="return validateBookingForm()">
+            <form id="bookingForm" method="POST" action="{{ url_for('add_booking_details', car_id=car.car_id) }}" novalidate>
                 <div class="mb-2">
                     <label class="form-label">Full Name</label>
                     <input type="text" class="form-control" name="customerName" value="{{ session['username'] }}" readonly>
                 </div>
                 <div class="mb-2">
                     <label class="form-label">Email</label>
-                    <input type="email" class="form-control" name="email" id="email" value="{{ session['email'] }}" readonly>
-                    <div class="invalid-feedback">Please enter a valid email.</div>
+                    <input type="email" class="form-control" name="email" id="email" value="{{ session['email'] }}">
                 </div>
                 <div class="mb-2">
-                    <label class="form-label">Pickup Date</label>
-                    <input type="date" class="form-control" name="pickupDate" id="pickupDate" value="{{ pickup_date }}" >
-                    <div class="invalid-feedback">Please select a valid pickup date. The date cannot be in the past.</div>
+                    <label class="form-label" for="pickupDate">Pickup Date</label>
+                    <input type="date" class="form-control" name="pickupDate" id="pickupDate" required>
+                    <span id="pickup-date-error" class="text-danger"></span>
                 </div>
                 <div class="mb-2">
-                    <label class="form-label">Drop Off Date</label>
-                    <input type="date" class="form-control" name="dropoffDate" id="dropoffDate" value="{{ dropoff_date }}">
-                    <div class="invalid-feedback">Please select a valid drop-off date. The date cannot be in the past.</div>
+                    <label class="form-label" for="dropoffDate">Drop Off Date</label>
+                    <input type="date" class="form-control" name="dropoffDate" id="dropoffDate" required>
+                    <span id="dropoff-date-error" class="text-danger"></span>
                 </div>
                 <div class="mb-2">
-                    <label class="form-label">Pickup Address</label>
-                    <input type="text" class="form-control" name="pickupAddress" id="pickupAddress">
-                    <div class="invalid-feedback">Please enter a valid pickup address.</div>
+                    <label class="form-label" for="pickupAddress">Pickup Address</label>
+                    <input type="text" class="form-control" name="pickupAddress" id="pickupAddress" required>
+                    <span id="pickup-address-error" class="text-danger"></span>
                 </div>
                 <div class="mb-2">
-                    <label class="form-label">Drop Off Address</label>
-                    <input type="text" class="form-control" name="dropoffAddress" id="dropoffAddress">
-                    <div class="invalid-feedback">Please enter a valid drop off address.</div>
+                    <label class="form-label" for="dropoffAddress">Drop Off Address</label>
+                    <input type="text" class="form-control" name="dropoffAddress" id="dropoffAddress" required>
+                    <span id="dropoff-address-error" class="text-danger"></span>
                 </div>
                 <div class="d-flex justify-content-around">
                     <button type="submit" class="btn btn-primary">Submit</button>
-                    <button type="button" id="paymentLink" class="btn btn-success">Proceed to Payment</button>
+                    <button type="button" id="paymentButton" class="btn btn-success">Pay Now</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-{% endblock %}
 
 <style>
     .form-label {
@@ -69,169 +67,113 @@
     .car-image {
         width: 100%;
         height: 150px;
-        object-fit: cover; /* Ensures image covers the box without distortion */
+        object-fit: cover;
         border-radius: 8px;
     }
-    .invalid-feedback {
-        display: none;
-    }
-    .car-details {
-        margin-bottom: 2px;
+    .text-danger {
+        font-size: 0.9rem;
+        margin-top: 5px;
     }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-
 <script>
+    const today = new Date().toISOString().split('T')[0];
+
     document.addEventListener('DOMContentLoaded', function() {
         const bookingForm = document.getElementById("bookingForm");
-        const paymentLink = document.getElementById("paymentLink");
+        const paymentButton = document.getElementById("paymentButton");
 
-        const today = new Date().toISOString().split('T')[0];
         document.getElementById('pickupDate').setAttribute('min', today);
         document.getElementById('dropoffDate').setAttribute('min', today);
 
-        bookingForm.addEventListener("submit", function(event) {
-            event.preventDefault(); // Prevent the default form submission
+        paymentButton.addEventListener("click", async function() {
+            if (!validateBookingForm()) {
+                return;
+            }
 
-            let valid = true;
-            let firstInvalidElement = null;
-
-            const email = document.getElementById('email').value;
             const pickupDate = document.getElementById('pickupDate').value;
             const dropoffDate = document.getElementById('dropoffDate').value;
             const pickupAddress = document.getElementById('pickupAddress').value;
             const dropoffAddress = document.getElementById('dropoffAddress').value;
 
-            if (!validateEmail(email)) {
-                valid = false;
-                const emailInput = document.getElementById('email');
-                emailInput.classList.add('is-invalid');
-                emailInput.nextElementSibling.style.display = 'block';
-                if (!firstInvalidElement) firstInvalidElement = emailInput;
-            } else {
-                const emailInput = document.getElementById('email');
-                emailInput.classList.remove('is-invalid');
-                emailInput.nextElementSibling.style.display = 'none';
-            }
+            try {
+                const response = await fetch('/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        car_id: "{{ car.car_id }}",
+                        pickup_date: pickupDate,
+                        dropoff_date: dropoffDate,
+                        pickup_address: pickupAddress,
+                        dropoff_address: dropoffAddress,
+                        price_per_day: {{ car.price_per_day }}
+                    })
+                });
 
-            if (!pickupDate) {
-                valid = false;
-                const pickupDateInput = document.getElementById('pickupDate');
-                pickupDateInput.classList.add('is-invalid');
-                pickupDateInput.nextElementSibling.style.display = 'block';
-                if (!firstInvalidElement) firstInvalidElement = pickupDateInput;
-            } else if (new Date(pickupDate) < new Date(today)) {
-                valid = false;
-                const pickupDateInput = document.getElementById('pickupDate');
-                pickupDateInput.classList.add('is-invalid');
-                pickupDateInput.nextElementSibling.style.display = 'block';
-                if (!firstInvalidElement) firstInvalidElement = pickupDateInput;
-            } else {
-                const pickupDateInput = document.getElementById('pickupDate');
-                pickupDateInput.classList.remove('is-invalid');
-                pickupDateInput.nextElementSibling.style.display = 'none';
-            }
+                const data = await response.json();
 
-            if (!dropoffDate) {
-                valid = false;
-                const dropoffDateInput = document.getElementById('dropoffDate');
-                dropoffDateInput.classList.add('is-invalid');
-                dropoffDateInput.nextElementSibling.style.display = 'block';
-                if (!firstInvalidElement) firstInvalidElement = dropoffDateInput;
-            } else if (new Date(dropoffDate) < new Date(today)) {
-                valid = false;
-                const dropoffDateInput = document.getElementById('dropoffDate');
-                dropoffDateInput.classList.add('is-invalid');
-                dropoffDateInput.nextElementSibling.style.display = 'block';
-                if (!firstInvalidElement) firstInvalidElement = dropoffDateInput;
-            } else {
-                const dropoffDateInput = document.getElementById('dropoffDate');
-                dropoffDateInput.classList.remove('is-invalid');
-                dropoffDateInput.nextElementSibling.style.display = 'none';
-            }
+                if (!response.ok || data.error) {
+                    console.error('Error:', data.error || 'Failed to create checkout session');
+                    alert(data.error || 'Failed to initiate payment. Please try again.');
+                    return;
+                }
 
-            if (!pickupAddress) {
-                valid = false;
-                const pickupAddressInput = document.getElementById('pickupAddress');
-                pickupAddressInput.classList.add('is-invalid');
-                pickupAddressInput.nextElementSibling.style.display = 'block';
-                if (!firstInvalidElement) firstInvalidElement = pickupAddressInput;
-            } else {
-                const pickupAddressInput = document.getElementById('pickupAddress');
-                pickupAddressInput.classList.remove('is-invalid');
-                pickupAddressInput.nextElementSibling.style.display = 'none';
-            }
-
-            if (!dropoffAddress) {
-                valid = false;
-                const dropoffAddressInput = document.getElementById('dropoffAddress');
-                dropoffAddressInput.classList.add('is-invalid');
-                dropoffAddressInput.nextElementSibling.style.display = 'block';
-                if (!firstInvalidElement) firstInvalidElement = dropoffAddressInput;
-            } else {
-                const dropoffAddressInput = document.getElementById('dropoffAddress');
-                dropoffAddressInput.classList.remove('is-invalid');
-                dropoffAddressInput.nextElementSibling.style.display = 'none';
-            }
-
-            if (valid) {
-                bookingForm.submit(); // Submit the form if all validations pass
-            } else if (firstInvalidElement) {
-                firstInvalidElement.focus();
+                // Redirect to the Stripe Checkout URL
+                window.location.href = data.checkoutUrl;
+            } catch (error) {
+                console.error('Payment error:', error);
+                alert('An error occurred during payment. Please try again.');
             }
         });
 
-        paymentLink.addEventListener("click", function(event) {
-            event.preventDefault();
-            const pickupDate = document.getElementById('pickupDate').value;
-            const dropoffDate = document.getElementById('dropoffDate').value;
-            const carId = "{{ car.car_id }}";
-            const paymentUrl = "{{ url_for('payment_page', car_id=carId) }}?pickup_date=" + pickupDate + "&dropoff_date=" + dropoffDate;
-            window.location.href = paymentUrl;
+        bookingForm.addEventListener("submit", function(event) {
+            if (!validateBookingForm()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
         });
-
-        function validateEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(String(email).toLowerCase());
-        }
     });
 
     function validateBookingForm() {
         let valid = true;
-        const pickupDate = document.getElementById('pickupDate').value;
-        const dropoffDate = document.getElementById('dropoffDate').value;
-        const pickupAddress = document.getElementById('pickupAddress').value;
-        const dropoffAddress = document.getElementById('dropoffAddress').value;
 
-        if (!pickupDate) {
-            document.getElementById('pickup-date-error').textContent = 'Pickup date is required!';
+        const pickupDateField = document.getElementById('pickupDate');
+        const dropoffDateField = document.getElementById('dropoffDate');
+        const pickupAddressField = document.getElementById('pickupAddress');
+        const dropoffAddressField = document.getElementById('dropoffAddress');
+
+        const pickupDate = pickupDateField.value;
+        const dropoffDate = dropoffDateField.value;
+        const pickupAddress = pickupAddressField.value.trim();
+        const dropoffAddress = dropoffAddressField.value.trim();
+
+        // Reset error messages
+        document.getElementById('pickup-date-error').textContent = '';
+        document.getElementById('dropoff-date-error').textContent = '';
+        document.getElementById('pickup-address-error').textContent = '';
+        document.getElementById('dropoff-address-error').textContent = '';
+
+        if (!pickupDate || new Date(pickupDate) < new Date(today)) {
+            document.getElementById('pickup-date-error').textContent = 'Pickup date must be today or later!';
             valid = false;
-        } else {
-            document.getElementById('pickup-date-error').textContent = '';
         }
 
-        if (!dropoffDate) {
-            document.getElementById('dropoff-date-error').textContent = 'Dropoff date is required!';
+        if (!dropoffDate || new Date(dropoffDate) < new Date(today) || new Date(dropoffDate) < new Date(pickupDate)) {
+            document.getElementById('dropoff-date-error').textContent = 'Dropoff date must be after pickup date!';
             valid = false;
-        } else {
-            document.getElementById('dropoff-date-error').textContent = '';
         }
 
         if (!pickupAddress) {
             document.getElementById('pickup-address-error').textContent = 'Pickup address is required!';
             valid = false;
-        } else {
-            document.getElementById('pickup-address-error').textContent = '';
         }
 
         if (!dropoffAddress) {
             document.getElementById('dropoff-address-error').textContent = 'Dropoff address is required!';
             valid = false;
-        } else {
-            document.getElementById('dropoff-address-error').textContent = '';
         }
 
         return valid;
     }
 </script>
+{% endblock %}

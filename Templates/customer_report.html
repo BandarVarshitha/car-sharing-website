@@ -3,40 +3,54 @@
 {% block title %}Customer Report{% endblock %}
 
 {% block content %}
-<div class="container mt-5" style="background-color: #ff6347; padding: 20px; border-radius: 12px;">
+{% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+{% endwith %}
+<div class="container mt-5">
     <h3 class="text-center mb-4 text-white">Customer Report</h3>
     <div id="noCustomersMessage" class="alert alert-info text-center" style="display: none;">
         No customers found.
     </div>
-    <div id="customersTableContainer" class="mt-4" style="display: none;">
+    <div id="customersTableContainer" style="display: none;">
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle">
                 <thead id="customersTableHead" class="table-dark" style="display: none;">
                     <tr>
-                        <th>Booking ID</th>
+                        <th>ID</th>
+                        <th>Image</th>
                         <th>Customer Name</th>
                         <th>Email</th>
                         <th>Phone Number</th>
-                        <!-- <th>Address</th> -->
                         <th>Car Name</th>
-                        <!-- <th>Booking Period</th>
-                        <th>Booking Location</th> -->
                     </tr>
                 </thead>
                 <tbody id="customersTableBody">
                     {% if bookings %}
-                        {% for booking in bookings %}
-                        <tr>
-                            <td>{{ booking.booking_id }}</td>
-                            <td>{{ booking.customer_name }}</td>
-                            <td>{{ booking.email }}</td>
-                            <td>{{ booking.phone_number }}</td>
-                            <!-- <td>{{ booking.address }}</td> -->
-                            <td>{{ booking.car_name }}</td>
-                            <!-- <td>{{ booking.booking_period }}</td>
-                            <td>{{ booking.booking_location }}</td> -->
-                        </tr>
-                        {% endfor %}
+                    {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.booking_id }}</td>
+                        <td>
+                            {% if booking.profile_picture %}
+                            <img src="{{ url_for('static', filename='uploads/' + booking.profile_picture) }}" alt="Profile Picture">
+                        {% else %}
+                            No Image
+                        {% endif %}
+                        </td>
+                        <td>{{ booking.customer_name }}</td>
+                        <td>{{ booking.email }}</td>
+                        <td>{{ booking.phone_number }}</td>
+                        <td>{{booking.car_name}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <div class="alert alert-info">No customer details found.</div>
+                    {% endif %}
+                    {% if not bookings %}
+                    <div class="alert alert-info text-center">No customer details found.</div>
                     {% endif %}
                 </tbody>
             </table>
@@ -44,23 +58,23 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const customersTableBody = document.getElementById('customersTableBody');
-    const noCustomersMessage = document.getElementById('noCustomersMessage');
-    const customersTableContainer = document.getElementById('customersTableContainer');
-    const customersTableHead = document.getElementById('customersTableHead');
+    document.addEventListener('DOMContentLoaded', () => {
+        const customersTableBody = document.getElementById('customersTableBody');
+        const noCustomersMessage = document.getElementById('noCustomersMessage');
+        const customersTableContainer = document.getElementById('customersTableContainer');
+        const customersTableHead = document.getElementById('customersTableHead');
 
-    if (customersTableBody.children.length > 0) {
-        noCustomersMessage.style.display = 'none';
-        customersTableContainer.style.display = 'block';
-        customersTableHead.style.display = 'table-header-group';
-    } else {
-        noCustomersMessage.style.display = 'block';
-        customersTableContainer.style.display = 'none';
-    }
-});
+        if (customersTableBody.children.length > 0) {
+            noCustomersMessage.style.display = 'none';
+            customersTableContainer.style.display = 'block';
+            customersTableHead.style.display = 'table-header-group';
+        } else {
+            noCustomersMessage.style.display = 'block';
+            customersTableContainer.style.display = 'none';
+        }
+    });
 </script>
 {% endblock %}
-

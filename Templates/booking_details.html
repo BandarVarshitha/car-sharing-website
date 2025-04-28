@@ -4,46 +4,203 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h3 class="text-center mb-4">Booking Details</h3>
-    <div class="row g-4">
-        <!-- Car Details -->
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <img src="{{ url_for('static', filename='uploads/' ~ booking.car_image_url) }}" class="card-img-top rounded-top car-image" alt="Car Image">
-                <div class="card-body">
-                    <h5 class="card-title text-primary">{{ booking.car_name }}</h5>
-                    <p class="card-text mb-1"><strong>Car ID:</strong> {{ booking.car_id }}</p>
-                    <p class="card-text mb-1"><strong>Car Number:</strong> {{ booking.car_number }}</p>
-                    <p class="card-text mb-1"><strong>Company:</strong> {{ booking.company_name }}</p>
-                    <p class="card-text mb-1"><strong>Type:</strong> {{ booking.car_type }}</p>
-                    <p class="card-text mb-1"><strong>Price per Day:</strong> <span class="text-success">${{ booking.price_per_day }}</span></p>
-                    <p class="card-text mb-1"><strong>From Location:</strong> {{ booking.from_location }}</p>
-                    <p class="card-text"><strong>To Location:</strong> {{ booking.to_location }}</p>
-                </div>
-            </div>
-        </div>
+    <h3 class="text-center mb-4">My Bookings</h3>
+    <div id="errorMessage" class="alert alert-danger text-center" style="display: none;"></div>
+    
+    <!-- Booking Table -->
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Booking ID</th>
+                    <th>Car Name</th>
+                    <th>Booking Period</th>
+                    <th>Location</th>
+                    <th>Price/Day</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="bookingsTableBody">
+                <tr>
+                    <td colspan="6" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
-        <!-- Customer Details -->
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h5 class="card-title text-primary">Customer Details</h5>
-                    <p class="card-text mb-1"><strong>Name:</strong> {{ booking.customer_name }}</p>
-                    <p class="card-text mb-1"><strong>Email:</strong> <a href="mailto:{{ booking.email }}" class="text-decoration-none">{{ booking.email }}</a></p>
-                    <p class="card-text mb-1"><strong>Contact Number:</strong> {{ booking.owner_phone_number }}</p>
-                    <p class="card-text mb-1"><strong>Booking Period:</strong> {{ booking.booking_period }}</p>
-                    <p class="card-text"><strong>Booking Location:</strong> {{ booking.booking_location }}</p>
+<!-- Booking Details Modal -->
+<div class="modal fade" id="bookingDetailsModal" tabindex="-1" aria-labelledby="bookingDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookingDetailsModalLabel">Booking Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-center mb-3">
+                    <button class="btn btn-primary me-2" id="carDetailsBtn">Car Details</button>
+                    <button class="btn btn-outline-primary" id="bookingDetailsBtn">Booking Details</button>
+                </div>
+                <div id="booking-details-content">
+                    <!-- Booking details will be loaded here -->
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-<style>
-    .car-image {
-        width: 100%;
-        height: 250px;
-        object-fit: cover;
+<script>
+    // Load all bookings when page opens
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/user_bookings')
+            .then(response => response.json())
+            .then(bookings => {
+                const tableBody = document.getElementById('bookingsTableBody');
+                
+                if (bookings.error) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-danger">${bookings.error}</td>
+                        </tr>`;
+                    return;
+                }
+                
+                if (!bookings.length) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-info">No bookings found.</td>
+                        </tr>`;
+                    return;
+                }
+                
+                tableBody.innerHTML = bookings.map(booking => `
+                    <tr>
+                        <td>${booking.booking_id}</td>
+                        <td>${booking.car_name}</td>
+                        <td>${booking.booking_period}</td>
+                        <td>${booking.booking_location}</td>
+                        <td>$${booking.price_per_day}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" 
+                                onclick="loadBookingDetails(${booking.booking_id})"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#bookingDetailsModal">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // Auto-load first booking if booking_id was passed
+                {% if booking_id %}
+                loadBookingDetails({{ booking_id }});
+                {% endif %}
+            })
+            .catch(error => {
+                document.getElementById('bookingsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-danger">Failed to load bookings.</td>
+                    </tr>`;
+            });
+    });
+
+    function loadBookingDetails(bookingId) {
+        fetch(`/api/user_booking_details/${bookingId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('errorMessage').textContent = 'Error: ' + data.error;
+                    document.getElementById('errorMessage').style.display = 'block';
+                    return;
+                }
+                document.getElementById('errorMessage').style.display = 'none';
+                const bookingDetailsContent = document.getElementById('booking-details-content');
+                bookingDetailsContent.innerHTML = `
+                    <div id="car-details" class="details-section">
+                        <div class="row g-4">
+                            <div class="col">
+                                <div class="card shadow-sm border-0 h-100">
+                                    <img src="${data.car_image_url || '{{ url_for("static", filename="images/placeholder.jpg") }}'}" 
+                                         class="card-img-top rounded-top" 
+                                         alt="Car Image" 
+                                         style="height: 250px; object-fit: cover;">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-primary">${data.car_name}</h5>
+                                        <p class="card-text mb-1"><strong>Car ID:</strong> ${data.car_id}</p>
+                                        <p class="card-text mb-1"><strong>Company:</strong> ${data.company_name}</p>
+                                        <p class="card-text mb-1"><strong>Type:</strong> ${data.car_type}</p>
+                                        <p class="card-text mb-1"><strong>Price per Day:</strong> <span class="text-success">$${data.price_per_day}</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="booking-details" class="details-section" style="display: none;">
+                        <div class="row g-4">
+                            <div class="col-md-12">
+                                <div class="card shadow-sm border-0 h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-primary">Booking Details</h5>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p class="card-text mb-2"><strong>Booking ID:</strong> ${data.booking_id}</p>
+                                                <p class="card-text mb-2"><strong>Customer Name:</strong> ${data.customer_name}</p>
+                                                <p class="card-text mb-2"><strong>Email:</strong> <a href="mailto:${data.email}">${data.email}</a></p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p class="card-text mb-2"><strong>Contact Number:</strong> ${data.contact_number || 'N/A'}</p>
+                                                <p class="card-text mb-2"><strong>Booking Period:</strong> ${data.booking_period}</p>
+                                                <p class="card-text mb-2"><strong>Location:</strong> ${data.booking_location}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+
+                // Ensure car details are shown by default
+                document.getElementById('car-details').style.display = 'block';
+                document.getElementById('booking-details').style.display = 'none';
+
+                // Toggle between car and booking details
+                document.getElementById('carDetailsBtn').addEventListener('click', function() {
+                    document.getElementById('car-details').style.display = 'block';
+                    document.getElementById('booking-details').style.display = 'none';
+                    this.classList.add('btn-primary');
+                    this.classList.remove('btn-outline-primary');
+                    document.getElementById('bookingDetailsBtn').classList.add('btn-outline-primary');
+                    document.getElementById('bookingDetailsBtn').classList.remove('btn-primary');
+                });
+
+                document.getElementById('bookingDetailsBtn').addEventListener('click', function() {
+                    document.getElementById('car-details').style.display = 'none';
+                    document.getElementById('booking-details').style.display = 'block';
+                    this.classList.add('btn-primary');
+                    this.classList.remove('btn-outline-primary');
+                    document.getElementById('carDetailsBtn').classList.add('btn-outline-primary');
+                    document.getElementById('carDetailsBtn').classList.remove('btn-primary');
+                });
+
+                // Show the modal
+                const modal = new bootstrap.Modal(document.getElementById('bookingDetailsModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error fetching booking details:', error);
+                document.getElementById('errorMessage').textContent = 'Failed to load booking details. Please try again.';
+                document.getElementById('errorMessage').style.display = 'block';
+            });
     }
-</style>
+</script>
+{% endblock %}

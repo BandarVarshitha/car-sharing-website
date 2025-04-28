@@ -3,7 +3,7 @@
 {% block title %}Change Password{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container col-6 mt-5 shadow p-5 mb-5 bg-white rounded">
     <h3 class="text-center mb-4">Change Password</h3>
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -30,7 +30,7 @@
             <input type="password" id="confirmPassword" class="form-control" name="confirmPassword">
             <div class="invalid-feedback" id="confirmPasswordError">Passwords do not match.</div>
         </div>
-        <button type="submit" class="btn btn-primary">Change Password</button>
+        <button type="submit" class="btn btn-primary w-100">Change Password</button>
     </form>
 </div>
 

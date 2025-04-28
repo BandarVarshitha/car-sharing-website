@@ -46,8 +46,8 @@
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownAdmin">
                         <li><a class="dropdown-item" href="/add_car">Add New Car</a></li> 
                         <li><a class="dropdown-item" href="/car_reports">My Car Report</a></li>
-                        <li><a class="dropdown-item" href="/booking_report">Customer Booking</a></li>
-                        <li><a class="dropdown-item" href="/booking_report">My Bookings</a></li>
+                        <li><a class="dropdown-item" href="/customer_details">Customer Booking</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('view_bookings') }}">>My Bookings</a></li>
                     </ul>
                 </li>
                 {% endif %}
@@ -105,7 +105,7 @@
             <div class="footer-column">
                 <div class="col-md-4">
                     <h5>Browse Page</h5>
-                    <ul class="list-unstyled">
+                    <ul class="list-unstyled text-decoration-none">
                         <li><a href="{{ url_for('home') }}" class="text-white">Home Page</a></li>
                         <li><a href="{{ url_for('about') }}" class="text-white">About</a></li>
                         <li><a href="{{ url_for('login') }}" class="text-white">Login</a></li>

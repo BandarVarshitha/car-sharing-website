@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Successful{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-success text-center">
+        <h4 class="alert-heading">Payment Successful!</h4>
+        <p>Your payment has been processed successfully. Thank you for your booking.</p>
+        <hr>
+        <a href="{{ url_for('home') }}" class="btn btn-primary">Go to Home</a>
+    </div>
+</div>
+{% endblock %}

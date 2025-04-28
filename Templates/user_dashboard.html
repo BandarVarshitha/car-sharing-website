@@ -15,66 +15,62 @@
                 <h4 class="text-uppercase text-center my-5">User Dashboard</h4>
             </div>
         </div>
-        <div class="row">
+        <div class="row g-3">
             <div class="col-xl-3 col-sm-6 col-12">
                 <div class="card h-100 text-center card-hover" onclick="location.href='/my_bookings';" style="cursor: pointer;">
                     <div class="card-content">
-                        <div class="card-body">
-                            <div class="media d-flex flex-column align-items-center">
-                                <div class="align-self-center">
-                                    <i class="icon-graph primary font-large-2" style="font-size: 60px;"></i>
-                                </div>
-                                <div class="media-body">
-                                    <h5 class="mt-2">My Bookings</h5>
-                                </div>
+                        <div class="card-body d-flex align-items-center justify-content-between" style="height: 80px;">
+                            <div class="align-self-center">
+                                <i class="icon-graph primary" style="font-size: 55px;"></i>
+                            </div>
+                            <div class="text-end">
+                                <h6 class="mt-2 mb-1" style="font-size: 22px;">My Bookings</h6>
+                                <p class="mb-0" style="font-size: 20px; font-weight: bold; color: #28a745;">{{ booking_count }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-xl-3 col-sm-6 col-12">
-                <div class="card h-100 text-center card-hover" onclick="location.href='/book_car';" style="cursor: pointer;">
+                <div class="card h-100 text-center card-hover" onclick="location.href='/car_reports';" style="cursor: pointer;">
                     <div class="card-content">
-                        <div class="card-body">
-                            <div class="media d-flex flex-column align-items-center">
-                                <div class="align-self-center">
-                                    <i class="icon-plus primary font-large-2" style="font-size: 60px;"></i>
-                                </div>
-                                <div class="media-body">
-                                    <h5 class="mt-2">Book a Car</h5>
-                                </div>
+                        <div class="card-body d-flex align-items-center justify-content-between" style="height: 80px;">
+                            <div class="align-self-center">
+                                <i class="icon-directions primary" style="font-size: 55px;"></i>
+                            </div>
+                            <div class="text-end">
+                                <h6 class="mt-2 mb-1" style="font-size: 22px;">My Cars</h6>
+                                <p class="mb-0" style="font-size: 20px; font-weight: bold; color: #28a745;">{{ car_count }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-xl-3 col-sm-6 col-12">
-                <div class="card h-100 text-center card-hover" onclick="location.href='/account';" style="cursor: pointer;">
+                <div class="card h-100 text-center card-hover" onclick="location.href='/car_type_report';" style="cursor: pointer;">
                     <div class="card-content">
-                        <div class="card-body">
-                            <div class="media d-flex flex-column align-items-center">
-                                <div class="align-self-center">
-                                    <i class="icon-user success font-large-2" style="font-size: 60px;"></i>
-                                </div>
-                                <div class="media-body">
-                                    <h5 class="mt-2">My Account</h5>
-                                </div>
+                        <div class="card-body d-flex align-items-center justify-content-between" style="height: 80px;">
+                            <div class="align-self-center">
+                                <i class="icon-list primary" style="font-size: 55px;"></i>
+                            </div>
+                            <div class="text-end">
+                                <h6 class="mt-2 mb-1" style="font-size: 22px;">Car Types</h6>
+                                <p class="mb-0" style="font-size: 20px; font-weight: bold; color: #28a745;">{{ car_type_count }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-xl-3 col-sm-6 col-12">
-                <div class="card h-100 text-center card-hover" onclick="location.href='/change_pswd';" style="cursor: pointer;">
+                <div class="card h-100 text-center card-hover" onclick="location.href='/company_report';" style="cursor: pointer;">
                     <div class="card-content">
-                        <div class="card-body">
-                            <div class="media d-flex flex-column align-items-center">
-                                <div class="align-self-center">
-                                    <i class="icon-pencil primary font-large-2" style="font-size: 60px;"></i>
-                                </div>
-                                <div class="media-body">
-                                    <h5 class="mt-2">Change Password</h5>
-                                </div>
+                        <div class="card-body d-flex align-items-center justify-content-between" style="height: 80px;">
+                            <div class="align-self-center">
+                                <i class="icon-briefcase primary" style="font-size: 55px;"></i>
+                            </div>
+                            <div class="text-end">
+                                <h6 class="mt-2 mb-1" style="font-size: 22px;">Companies</h6>
+                                <p class="mb-0" style="font-size: 20px; font-weight: bold; color: #28a745;">{{ company_count }}</p>
                             </div>
                         </div>
                     </div>
@@ -82,18 +78,16 @@
             </div>
         </div>
 
-        <div class="row m-3">
+        <div class="row g-3 mt-3">
             <div class="col-xl-3 col-sm-6 col-12">
                 <div class="card h-100 text-center card-hover" onclick="location.href='/logout';" style="cursor: pointer;">
                     <div class="card-content">
-                        <div class="card-body">
-                            <div class="media d-flex flex-column align-items-center">
-                                <div class="align-self-center">
-                                    <i class="icon-rocket danger font-large-2" style="font-size: 60px;"></i>
-                                </div>
-                                <div class="media-body">
-                                    <h5 class="mt-2">Logout</h5>
-                                </div>
+                        <div class="card-body d-flex align-items-center justify-content-between" style="height: 80px;">
+                            <div class="align-self-center">
+                                <i class="icon-rocket danger" style="font-size: 55px;"></i>
+                            </div>
+                            <div class="text-center">
+                                <h6 class="mt-2 mb-0" style="font-size: 22px;">Logout</h6>
                             </div>
                         </div>
                     </div>
@@ -109,6 +103,11 @@
     }
     .card {
         height: 100%;
+        min-height: 90px;
+    }
+    h6 {
+        font-size: 22px;
+        font-weight: 600;
     }
 </style>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

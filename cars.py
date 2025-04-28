@@ -17,14 +17,14 @@ app.secret_key = "your secret key"
 
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['ALLOWED_IMAGE_EXTENSIONS'] = {'png', 'jpg', 'jpeg'}
+app.config['ALLOWED_IMAGE_EXTENSIONS'] = {'png', 'jpg', 'jpeg','avif'}
 
 # Mail configuration
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'xxxxxxx'  # Replace with your email
-app.config['MAIL_PASSWORD'] = 'xxxxxxxxx'  # Replace with your App Password
+app.config['MAIL_USERNAME'] = '19512varsha@gmail.com'  # Replace with your email
+app.config['MAIL_PASSWORD'] = 'nultjpikbivsgljc'  # Replace with your App Password
 mail = Mail(app)
 
 # Serializer for generating and validating tokens
@@ -44,8 +44,8 @@ try:
     conn = mysql.connector.connect(
         host='localhost',
         user='root',
-        password='xxxxxxx',
-        database='xxxxxx'
+        password='Sujatha#12345',
+        database='cars'
     )
     cursor = conn.cursor(dictionary=True)
 except mysql.connector.Error as e:
@@ -118,7 +118,7 @@ def home():
             FROM Cars
             JOIN Companies ON Cars.company_id = Companies.company_id
             ORDER BY Cars.price_per_day DESC
-            LIMIT 5
+            LIMIT 3
         ''')
         top_picked_cars = cursor.fetchall()
         for car in top_picked_cars:
@@ -548,6 +548,19 @@ def book_car():
     return redirect(url_for('login'))
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/book_car_confirm/<int:car_id>', methods=['GET', 'POST'])
 def book_car_confirm(car_id):
     if 'loggedin' in session:
@@ -592,6 +605,26 @@ def book_car_confirm(car_id):
             return redirect(url_for('book_car'))
 
     return redirect(url_for('login'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @app.route('/add_booking_details/<int:car_id>', methods=['POST'])
 def add_booking_details(car_id):
@@ -870,9 +903,6 @@ def cars():
         flash('Database error occurred. Please try again later!', 'danger')
         return redirect(url_for('home'))
 
-@app.route('/booking_details/<int:booking_id>')
-def booking_details(booking_id):
-    return redirect(url_for('home'))
 
 @app.route('/car_details/<int:car_id>')
 def car_details(car_id):
@@ -921,32 +951,117 @@ def customer_report():
             return redirect(url_for('admin_dashboard'))
     return redirect(url_for('login'))
 
+# @app.route('/customer_details')
+# def customer_details():
+#     if 'loggedin' in session and session.get('role') == 'admin':
+#         try:
+#             cursor.execute('''
+#                 SELECT Bookings.booking_id, Bookings.customer_name, Bookings.email, 
+#                        user_profile.phone_number, 
+#                        CONCAT(user_profile.address_line1, ', ', user_profile.address_line2, ', ', user_profile.city, ', ', user_profile.state, ', ', user_profile.country) AS address,
+#                        Cars.car_name, 
+#                        CONCAT(Bookings.pickup_date, ' to ', Bookings.dropoff_date) AS booking_period,
+#                        CONCAT(Bookings.pickup_address, ' to ', Bookings.dropoff_address) AS booking_location
+#                 FROM Bookings
+#                 JOIN Cars ON Bookings.car_id = Cars.car_id
+#                 JOIN Users ON Bookings.user_id = Users.user_id
+#                 JOIN user_profile ON Users.user_id = user_profile.user_id
+#                 WHERE Cars.owner_id = %s
+#             ''', (session['user_id'],))
+#             bookings = cursor.fetchall()
+#             print(bookings)
+#             return render_template('customer_report.html', bookings=bookings)
+#         except mysql.connector.Error as e:
+#             logging.error("Database error: %s", e)
+#             flash('Database error occurred. Please try again later!', 'danger')
+#             return redirect(url_for('admin_dashboard'))
+#     return redirect(url_for('login'))
+
+
+
 @app.route('/customer_details')
 def customer_details():
-    if 'loggedin' in session and session.get('role') == 'admin':
-        try:
-            cursor.execute('''
-                SELECT Bookings.booking_id, Bookings.customer_name, Bookings.email, 
-                       user_profile.phone_number, 
-                       CONCAT(user_profile.address_line1, ', ', user_profile.address_line2, ', ', user_profile.city, ', ', user_profile.state, ', ', user_profile.country) AS address,
-                       Cars.car_name, 
-                       CONCAT(Bookings.pickup_date, ' to ', Bookings.dropoff_date) AS booking_period,
-                       CONCAT(Bookings.pickup_address, ' to ', Bookings.dropoff_address) AS booking_location
-                FROM Bookings
-                JOIN Cars ON Bookings.car_id = Cars.car_id
-                JOIN Users ON Bookings.user_id = Users.user_id
-                JOIN user_profile ON Users.user_id = user_profile.user_id
-                WHERE Cars.owner_id = %s
-            ''', (session['user_id'],))
-            bookings = cursor.fetchall()
-            print(bookings)
-            return render_template('customer_report.html', bookings=bookings)
-        except mysql.connector.Error as e:
-            logging.error("Database error: %s", e)
-            flash('Database error occurred. Please try again later!', 'danger')
-            return redirect(url_for('admin_dashboard'))
-    return redirect(url_for('login'))
+    """
+    Fetch customer booking details based on user role:
+    - Admins: All bookings for their owned cars.
+    - Users: Their own bookings and customer details.
+    """
+    if 'loggedin' not in session or session.get('role') not in ['admin', 'user']:
+        flash('Please log in to view customer details.', 'warning')
+        return redirect(url_for('login'))
 
+    connection = None
+    cursor = None
+    try:
+        
+        user_id = session['user_id']
+        role = session['role']
+
+        if role == 'admin':
+            cursor.execute('''
+                SELECT 
+                    b.booking_id, 
+                    b.customer_name, 
+                    b.email, 
+                    up.phone_number, 
+                    up.profile_picture,
+                    CONCAT(COALESCE(up.address_line1, ''), ', ', 
+                           COALESCE(up.address_line2, ''), ', ', 
+                           COALESCE(up.city, ''), ', ', 
+                           COALESCE(up.state, ''), ', ', 
+                           COALESCE(up.country, '')) AS address,
+                    c.car_name, 
+                    CONCAT(b.pickup_date, ' to ', b.dropoff_date) AS booking_period,
+                    CONCAT(b.pickup_address, ' to ', b.dropoff_address) AS booking_location
+                FROM Bookings b
+                JOIN Cars c ON b.car_id = c.car_id
+                JOIN Users u ON b.user_id = u.user_id
+                LEFT JOIN user_profile up ON u.user_id = up.user_id
+                WHERE c.owner_id = %s
+            ''', (user_id,))
+        else:
+            cursor.execute('''
+                SELECT 
+                    b.booking_id, 
+                    b.customer_name, 
+                    b.email, 
+                    up.phone_number, 
+                    up.profile_picture,
+                    CONCAT(COALESCE(up.address_line1, ''), ', ', 
+                           COALESCE(up.address_line2, ''), ', ', 
+                           COALESCE(up.city, ''), ', ', 
+                           COALESCE(up.state, ''), ', ', 
+                           COALESCE(up.country, '')) AS address,
+                    c.car_name, 
+                    CONCAT(b.pickup_date, ' to ', b.dropoff_date) AS booking_period,
+                    CONCAT(b.pickup_address, ' to ', b.dropoff_address) AS booking_location
+                FROM Bookings b
+                JOIN Cars c ON b.car_id = c.car_id
+                JOIN Users u ON b.user_id = u.user_id
+                LEFT JOIN user_profile up ON u.user_id = up.user_id
+                WHERE b.user_id = %s
+            ''', (user_id,))
+
+        bookings = cursor.fetchall()
+        print(bookings)
+        logging.info("Fetched %s bookings for user_id %s (role: %s)", len(bookings), user_id, role)
+
+        cursor.close()
+
+        if not bookings:
+            flash('No booking details found.', 'info')
+
+        return render_template('customer_report.html', bookings=bookings)
+
+    except Exception as e:
+        logging.error("Error in customer_details: %s", e)
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'connection' in locals() and connection and connection.is_connected():
+            connection.close()
+        flash('An error occurred. Please try again later!', 'danger')
+        return redirect(url_for('home'))
+    
 @app.route('/cities', methods=['GET'])
 def get_cities():
     logging.debug("Fetching cities...")  # Debugging: Log when the endpoint is triggered
@@ -972,6 +1087,18 @@ def api_bookings():
 
 @app.route('/delete_booking/<int:booking_id>', methods=['POST'])
 def delete_booking(booking_id):
+    if 'loggedin' in session:
+        try:
+            cursor.execute('DELETE FROM Bookings WHERE booking_id = %s', (booking_id,))
+            conn.commit()
+            return jsonify(success=True)
+        except mysql.connector.Error as e:
+            conn.rollback()
+            logging.error("Database error: %s", e)
+            return jsonify(success=False, message='Database error occurred. Please try again later!', error=str(e))
+        except Exception as e:
+            logging.error("Unexpected error: %s", e)
+            return jsonify(success=False, message='An unexpected error occurred. Please try again later!', error=str(e))
     return jsonify(success=False, message='Unauthorized'), 401
 
 @app.route('/delete_company/<int:company_id>', methods=['POST'])
@@ -1105,6 +1232,10 @@ def edit_car_type(type_id):
         return render_template('add_car_type.html', car_type=car_type)
     return redirect(url_for('login'))
 
+@app.route('/edit_booking/<int:booking_id>', methods=['GET', 'POST'])
+def edit_booking(booking_id):
+    return redirect(url_for('home'))
+
 @app.route('/api/cars', methods=['GET'])
 def api_cars():
     if 'loggedin' in session:
@@ -1210,59 +1341,271 @@ def account():
             return redirect(url_for('home'))
     return redirect(url_for('login'))
 
+
 @app.route('/booking_report')
 def booking_report():
-    return redirect(url_for('home'))
+    if 'loggedin' in session:
+        try:
+            page = request.args.get('page', 1, type=int)
+            per_page = 5
+            offset = (page - 1) * per_page
+            cursor.execute('''
+                SELECT Bookings.booking_id, 
+                       CONCAT(Bookings.pickup_date, ' to ', Bookings.dropoff_date) AS booking_period,
+                       CONCAT(Bookings.pickup_address, ' to ', Bookings.dropoff_address) AS booking_location,
+                       Cars.car_name, Cars.price_per_day, Cars.image_url AS car_image_url
+                FROM Bookings
+                JOIN Cars ON Bookings.car_id = Cars.car_id
+                JOIN Users ON Bookings.user_id = Users.user_id
+                WHERE Bookings.user_id = %s
+                LIMIT %s OFFSET %s
+            ''', (session['user_id'], per_page, offset))
+            bookings = cursor.fetchall()
+            cursor.execute('SELECT COUNT(*) FROM Bookings WHERE user_id = %s', (session['user_id'],))
+            total = cursor.fetchone()['COUNT(*)']
+            total_pages = (total + per_page - 1) // per_page
+            return render_template('booking_report.html', bookings=bookings, page=page, total_pages=total_pages)
+        except mysql.connector.Error as e:
+            logging.error("Database error: %s", e)
+            flash('Database error occurred. Please try again later!', 'danger')
+            return redirect(url_for('home'))
+    return redirect(url_for('login'))
+
 
 @app.route('/admin_booking_report')
 def admin_booking_report():
-    return redirect(url_for('home'))
+    if 'loggedin' in session and session.get('role') == 'admin':
+        try:
+            # Pagination parameters
+            page = request.args.get('page', 1, type=int)
+            if page < 1:
+                page = 1
+            per_page = 5  # Number of bookings per page
+            offset = (page - 1) * per_page
 
-@app.route('/api/top_picked_cars', methods=['GET'])
-def api_top_picked_cars():
+            # Query to fetch paginated bookings
+            cursor.execute('''
+                SELECT Bookings.booking_id, 
+                       CONCAT(Bookings.pickup_date, ' to ', Bookings.dropoff_date) AS booking_period,
+                       CONCAT(Bookings.pickup_address, ' to ', Bookings.dropoff_address) AS booking_location,
+                       Cars.car_name, Cars.price_per_day, Cars.image_url AS car_image_url,
+                       Users.username AS customer_name, Users.email AS customer_email
+                FROM Bookings
+                JOIN Cars ON Bookings.car_id = Cars.car_id
+                JOIN Users ON Bookings.user_id = Users.user_id
+                WHERE Cars.owner_id = %s
+                LIMIT %s OFFSET %s
+            ''', (session['user_id'], per_page, offset))
+            bookings = cursor.fetchall()
+
+            # Query to count total bookings
+            cursor.execute('''
+                SELECT COUNT(*) AS total
+                FROM Bookings
+                JOIN Cars ON Bookings.car_id = Cars.car_id
+                JOIN Users ON Bookings.user_id = Users.user_id
+                WHERE Cars.owner_id = %s
+            ''', (session['user_id'],))
+            total_bookings = cursor.fetchone()['total']
+
+            # Calculate total pages
+            total_pages = (total_bookings + per_page - 1) // per_page
+
+            # Pass pagination data to the template
+            pagination = {
+                'page': page,
+                'per_page': per_page,
+                'total': total_bookings,
+                'total_pages': total_pages
+            }
+
+            return render_template('admin_booking_report.html', bookings=bookings, pagination=pagination)
+        except mysql.connector.Error as e:
+            logging.error("Database error: %s", e)
+            flash('Database error occurred. Please try again later!', 'danger')
+            return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('login'))
+
+# @app.route('/admin_booking_report')
+# def admin_booking_report():
+#     if 'loggedin' in session and session.get('role') == 'admin':
+#         try:
+#             cursor.execute('''
+#                 SELECT Bookings.booking_id, 
+#                        CONCAT(Bookings.pickup_date, ' to ', Bookings.dropoff_date) AS booking_period,
+#                        CONCAT(Bookings.pickup_address, ' to ', Bookings.dropoff_address) AS booking_location,
+#                        Cars.car_name, Cars.price_per_day, Cars.image_url AS car_image_url,
+#                        Users.username AS customer_name, Users.email AS customer_email
+#                 FROM Bookings
+#                 JOIN Cars ON Bookings.car_id = Cars.car_id
+#                 JOIN Users ON Bookings.user_id = Users.user_id
+#                 WHERE Cars.owner_id = %s
+#             ''', (session['user_id'],))
+#             bookings = cursor.fetchall()
+#             return render_template('admin_booking_report.html', bookings=bookings)
+#         except mysql.connector.Error as e:
+#             logging.error("Database error: %s", e)
+#             flash('Database error occurred. Please try again later!', 'danger')
+#             return redirect(url_for('admin_dashboard'))
+#     return redirect(url_for('login'))
+# Route to display booking page
+@app.route('/view_bookings')
+def view_bookings():
+    if 'loggedin' not in session or session.get('role') != 'user':
+        return redirect(url_for('login'))
+    
     try:
+        # Get the most recent booking ID to pre-load
         cursor.execute('''
-            SELECT Cars.car_id, Cars.car_name, Cars.price_per_day, Cars.image_url, Companies.company_name
-            FROM Cars
-            JOIN Companies ON Cars.company_id = Companies.company_id
-            ORDER BY Cars.price_per_day DESC
-            LIMIT 5
-        ''')
-        cars = cursor.fetchall()
-        print("=======================",cars)
+            SELECT booking_id FROM Bookings 
+            WHERE user_id = %s 
+            ORDER BY pickup_date DESC 
+            LIMIT 1
+        ''', (session['user_id'],))
+        booking = cursor.fetchone()
         
-        for car in cars:
-            car['image_url'] = url_for('static', filename='uploads/' + car['image_url'])
-        return jsonify({'cars': cars})
-    except mysql.connector.Error as e:
-        logging.error("Database error: %s", e)
-        return jsonify({'error': 'Database error occurred'}), 500
+        return render_template('booking_details.html', 
+                            booking_id=booking['booking_id'] if booking else None,
+                            user_id=session['user_id'])
     except Exception as e:
-        logging.error("Unexpected error: %s", e)
-        return jsonify({'error': 'An unexpected error occurred'}), 500
+        logging.error("Error in view_bookings: %s", e)
+        return render_template('error.html', message="Failed to load bookings page")
 
-@app.route('/api/latest_added_cars', methods=['GET'])
-def api_latest_added_cars():
+@app.route('/api/user_bookings')
+def api_user_bookings():
+    if 'loggedin' not in session or session.get('role') != 'user':
+        return jsonify({'error': 'Unauthorized'}), 401
+
     try:
         cursor.execute('''
-            SELECT Cars.car_id, Cars.car_name, Cars.price_per_day, Cars.image_url, Companies.company_name
-            FROM Cars
-            JOIN Companies ON Cars.company_id = Companies.company_id
-            ORDER BY Cars.car_id DESC
-            LIMIT 5
-        ''')
-        cars = cursor.fetchall()
-        print("=======================",cars)
-        for car in cars:
-            car['image_url'] = url_for('static', filename='uploads/' + car['image_url'])
-        return jsonify({'cars': cars})
-    except mysql.connector.Error as e:
-        logging.error("Database error: %s", e)
-        return jsonify({'error': 'Database error occurred'}), 500
-    except Exception as e:
-        logging.error("Unexpected error: %s", e)
-        return jsonify({'error': 'An unexpected error occurred'}), 500
+            SELECT 
+                b.booking_id, 
+                CONCAT(b.pickup_date, ' to ', b.dropoff_date) AS booking_period,
+                CONCAT(b.pickup_address, ' to ', b.dropoff_address) AS booking_location,
+                c.car_name, 
+                c.price_per_day,
+                c.image_url AS car_image_url,
+                co.company_name,
+                ct.type_name AS car_type
+            FROM Bookings b
+            JOIN Cars c ON b.car_id = c.car_id
+            JOIN Companies co ON c.company_id = co.company_id
+            JOIN CarTypes ct ON c.type_id = ct.type_id
+            WHERE b.user_id = %s
+            ORDER BY b.pickup_date DESC
+        ''', (session['user_id'],))
+        
+        bookings = cursor.fetchall()  # Dictionary results
 
+        # Process image URLs
+        for booking in bookings:
+            if booking['car_image_url']:
+                booking['car_image_url'] = url_for('static', filename='uploads/' + booking['car_image_url'], _external=True)
+            else:
+                booking['car_image_url'] = url_for('static', filename='images/placeholder.jpg', _external=True)
+
+        return jsonify(bookings)
+        
+    except mysql.connector.Error as e:
+        logging.error("Database error in api_user_bookings: %s", e)
+        return jsonify({
+            'error': 'Database error',
+            'details': str(e)
+        }), 500
+    except Exception as e:
+        logging.error("Unexpected error in api_user_bookings: %s", e)
+        return jsonify({
+            'error': 'An unexpected error occurred',
+            'details': str(e)
+        }), 500
+
+@app.route('/api/user_booking_details/<int:booking_id>')
+def api_user_booking_details(booking_id):
+    if 'loggedin' not in session or session.get('role') != 'user' or 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        cursor.execute('''
+            SELECT 
+                b.booking_id, 
+                CONCAT(b.pickup_date, ' to ', b.dropoff_date) AS booking_period,
+                CONCAT(b.pickup_address, ' to ', b.dropoff_address) AS booking_location,
+                c.car_id, c.car_name, co.company_name, ct.type_name AS car_type, 
+                c.price_per_day, c.image_url AS car_image_url,
+                b.customer_name, b.email
+            FROM Bookings b
+            JOIN Cars c ON b.car_id = c.car_id
+            JOIN Companies co ON c.company_id = co.company_id
+            JOIN CarTypes ct ON c.type_id = ct.type_id
+            JOIN users u ON b.user_id = u.user_id
+            WHERE b.booking_id = %s AND b.user_id = %s
+        ''', (booking_id, session['user_id']))
+        
+        booking = cursor.fetchone()  # Fetch dictionary result immediately
+
+        # Consume any remaining result sets to clear the cursor
+        while cursor.nextset():
+            pass
+
+        if not booking:
+            return jsonify({'error': 'Booking not found'}), 404
+
+        # Process image URL
+        if booking['car_image_url']:
+            booking['car_image_url'] = url_for('static', filename='uploads/' + booking['car_image_url'], _external=True)
+        else:
+            booking['car_image_url'] = url_for('static', filename='images/placeholder.jpg', _external=True)
+
+        return jsonify(booking)
+        
+    except mysql.connector.Error as e:
+        logging.error("Database error in api_user_booking_details: %s", e)
+        return jsonify({
+            'error': 'Database error',
+            'details': str(e)
+        }), 500
+    except Exception as e:
+        logging.error("Unexpected error in api_user_booking_details: %s", e)
+        return jsonify({
+            'error': 'An unexpected error occurred',
+            'details': str(e)
+        }), 500
+        
+@app.route('/api/cancel_booking/<int:booking_id>', methods=['DELETE'])
+def api_cancel_booking(booking_id):
+    if 'loggedin' not in session or session.get('role') != 'user':
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        # Verify booking belongs to user
+        cursor.execute('SELECT user_id FROM Bookings WHERE booking_id = %s', (booking_id,))
+        booking = cursor.fetchone()
+        
+        if not booking or booking['user_id'] != session['user_id']:
+            return jsonify({'error': 'Booking not found or not authorized'}), 404
+
+        # Delete booking
+        cursor.execute('DELETE FROM Bookings WHERE booking_id = %s', (booking_id,))
+        conn.commit()
+        
+        return jsonify({'success': True, 'message': 'Booking cancelled successfully'})
+        
+    except mysql.connector.Error as e:
+        conn.rollback()
+        logging.error("Database error in api_cancel_booking: %s", e)
+        return jsonify({
+            'error': 'Database error',
+            'details': str(e)
+        }), 500
+    except Exception as e:
+        conn.rollback()
+        logging.error("Unexpected error in api_cancel_booking: %s", e)
+        return jsonify({
+            'error': 'An unexpected error occurred',
+            'details': str(e)
+        }), 500
+        
+        
 # @app.route('/delete_car_type/<int:type_id>', methods=['POST'])
 # def delete_car_type(type_id):
 #     if 'loggedin' in session and session.get('role') == 'admin':
@@ -1291,15 +1634,15 @@ def delete_car(car_id):
         try:
             cursor.execute('DELETE FROM Cars WHERE car_id = %s AND owner_id = %s', (car_id, session['user_id']))
             conn.commit()
-            return jsonify(success(True))
+            return jsonify(success=False)
         except mysql.connector.Error as e:
             conn.rollback()
             logging.error("Database error: %s", e)
-            return jsonify(success(False), message='Database error occurred. Please try again later!', error=str(e))
+            return jsonify(success=False, message='Database error occurred. Please try again later!', error=str(e))
         except Exception as e:
             logging.error("Unexpected error: %s", e)
-            return jsonify(success(False), message='An unexpected error occurred. Please try again later!', error=str(e))
-    return jsonify(success(False), message='Unauthorized'), 401
+            return jsonify(success=False, message='An unexpected error occurred. Please try again later!', error=str(e))
+    return jsonify(success=False, message='Unauthorized'), 401
 
 @app.route('/update_account', methods=['POST'])
 def update_account():
@@ -1411,15 +1754,15 @@ def delete_car_type(type_id):
             cursor.execute('DELETE FROM CarTypes WHERE type_id = %s', (type_id,))
             conn.commit()
             
-            return jsonify(success(True))
+            return jsonify(success=True)
         except mysql.connector.Error as e:
             conn.rollback()
             logging.error("Database error: %s", e)
-            return jsonify(success(False), message='Database error occurred. Please try again later!', error=str(e))
+            return jsonify(success=False, message='Database error occurred. Please try again later!', error=str(e))
         except Exception as e:
             logging.error("Unexpected error: %s", e)
-            return jsonify(success(False), message='An unexpected error occurred. Please try again later!', error=str(e))
-    return jsonify(success(False), message='Unauthorized'), 401
+            return jsonify(success=False, message='An unexpected error occurred. Please try again later!', error=str(e))
+    return jsonify(success=False, message='Unauthorized'), 401
 
 @app.route('/api/companies', methods=['GET'])
 def api_companies():
@@ -1455,7 +1798,7 @@ def api_companies():
 def api_car_types():
     if 'loggedin' in session:
         try:
-            page = request.args.get('page', 1, type(int))
+            page = request.args.get('page', 1, type=int)
             per_page = 5
             offset = (page - 1) * per_page
             cursor.execute('''
@@ -1465,8 +1808,8 @@ def api_car_types():
                 LIMIT %s OFFSET %s
             ''', (session['user_id'], per_page, offset))
             car_types = cursor.fetchall()
-            cursor.execute('SELECT COUNT(*) FROM CarTypes WHERE user_id = %s', (session['user_id'],))
-            total = cursor.fetchone()['COUNT(*)']
+            cursor.execute('SELECT COUNT(*) AS Total FROM CarTypes WHERE user_id = %s', (session['user_id'],))
+            total = cursor.fetchone()['Total']
             return jsonify({
                 'car_types': car_types,
                 'total': total,
@@ -1525,85 +1868,155 @@ def get_booking_details(booking_id):
 
 @app.route('/api/booking_details/<int:booking_id>')
 def api_booking_details(booking_id):
-    return jsonify({'error': 'Unauthorized'}), 401
+    if 'loggedin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
 
-@app.route('/payment', methods=['POST'])
-def payment():
     try:
-        # Create a new Stripe Checkout Session
+        cursor.execute('''
+            SELECT 
+                b.booking_id,
+                b.customer_name,
+                b.email,
+                CONCAT(b.pickup_date, ' to ', b.dropoff_date) AS booking_period,
+                CONCAT(b.pickup_address, ' to ', b.dropoff_address) AS booking_location,
+                c.car_id,
+                c.car_name,
+                c.price_per_day,
+                c.image_url AS car_image_url,
+                c.from_location,
+                c.to_location,
+                ct.type_name AS car_type,
+                co.company_name,
+                u.phone_number AS owner_phone_number
+            FROM Bookings b
+            JOIN Cars c ON b.car_id = c.car_id
+            JOIN CarTypes ct ON c.type_id = ct.type_id
+            JOIN Companies co ON c.company_id = co.company_id
+            LEFT JOIN user_profile u ON c.owner_id = u.user_id
+            WHERE b.booking_id = %s
+            AND (b.user_id = %s OR %s = 'admin')
+        ''', (booking_id, session['user_id'], session.get('role')))
+        booking = cursor.fetchone()
+
+        if not booking:
+            return jsonify({'error': 'Booking not found or unauthorized'}), 404
+
+        # Construct the response
+        response = {
+            'booking_id': booking['booking_id'],
+            'customer_name': booking['customer_name'],
+            'email': booking['email'],
+            'booking_period': booking['booking_period'],
+            'booking_location': booking['booking_location'],
+            'car_id': booking['car_id'],
+            'car_name': booking['car_name'],
+            'price_per_day': float(booking['price_per_day']),  # Convert Decimal to float
+            'car_image_url': booking['car_image_url'],
+            'from_location': booking['from_location'],
+            'to_location': booking['to_location'],
+            'car_type': booking['car_type'],
+            'company_name': booking['company_name'],
+            'owner_phone_number': booking['owner_phone_number'] or 'N/A',  # Handle NULL
+            # Note: car_number is not in the schema, so we'll omit it or set a default
+            'car_number': 'N/A'  # Placeholder since car_number is not in the schema
+        }
+
+        return jsonify(response)
+    except mysql.connector.Error as e:
+        logging.error("Database error: %s", e)
+        return jsonify({'error': 'Database error occurred'}), 500
+    except Exception as e:
+        logging.error("Unexpected error: %s", e)
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout_session():
+    try:
+        data = request.get_json()
+        required_fields = ['car_id', 'pickup_date', 'dropoff_date', 'pickup_address', 'dropoff_address', 'price_per_day']
+        if not all(key in data for key in required_fields):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        try:
+            price_per_day = float(data['price_per_day'])
+            if price_per_day <= 0:
+                raise ValueError("Price per day must be positive")
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid price per day'}), 400
+
+        # Calculate number of days
+        pickup_date = datetime.strptime(data['pickup_date'], '%Y-%m-%d')
+        dropoff_date = datetime.strptime(data['dropoff_date'], '%Y-%m-%d')
+        days = (dropoff_date - pickup_date).days
+
+        if days <= 0:
+            return jsonify({'error': 'Dropoff date must be after pickup date'}), 400
+
+        # Calculate total price (in cents for Stripe)
+        total_price = int(price_per_day * days * 100)
+
+        # Log request data for debugging
+        app.logger.debug(f"Received data: {data}")
+        app.logger.debug(f"Calculated days: {days}, total_price: {total_price}")
+
+        # Create a checkout session
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
                 'price_data': {
                     'currency': 'usd',
+                    'unit_amount': total_price,
                     'product_data': {
-                        'name': 'Car Sharing Booking',
+                        'name': f'Car Rental - Car ID: {data["car_id"]}',
+                        'description': f'Rental from {data["pickup_date"]} to {data["dropoff_date"]}',
                     },
-                    'unit_amount': int(request.form['amount']),
                 },
                 'quantity': 1,
             }],
             mode='payment',
-            success_url=url_for('success', _external=True),
-            cancel_url=url_for('cancel', _external=True),
+            success_url=request.host_url + 'payment/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=request.host_url + 'payment/cancel',
+            metadata={
+                'car_id': data['car_id'],
+                'pickup_date': data['pickup_date'],
+                'dropoff_date': data['dropoff_date'],
+                'pickup_address': data['pickup_address'],
+                'dropoff_address': data['dropoff_address']
+            }
         )
-        return redirect(session.url, code=303)
+
+        # Return the checkout session URL
+        return jsonify({'checkoutUrl': session.url})
+
+    except stripe.error.StripeError as e:
+        app.logger.error(f"Stripe error: {str(e)}")
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
-        logging.error("Error creating Stripe session: %s", e)
-        return str(e)
+        app.logger.error(f"Server error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
-@app.route('/success')
-def success():
-    return render_template('success.html')
+@app.route('/payment/success')
+def payment_success():
+    try:
+        session_id = request.args.get('session_id')
+        session = stripe.checkout.Session.retrieve(session_id)
+        
+        # Save booking details to database if needed
+        metadata = session.metadata
+        app.logger.debug("Booking Details:")
+        app.logger.debug(f"Car ID: {metadata['car_id']}")
+        app.logger.debug(f"Pickup Date: {metadata['pickup_date']}")
+        app.logger.debug(f"Dropoff Date: {metadata['dropoff_date']}")
+        app.logger.debug(f"Pickup Address: {metadata['pickup_address']}")
+        app.logger.debug(f"Dropoff Address: {metadata['dropoff_address']}")
+        
+        return render_template('payment_success.html', session=session)
 
-@app.route('/cancel')
-def cancel():
-    return render_template('cancel.html')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-@app.route('/payment_page/<int:car_id>', methods=['GET'])
-def payment_page(car_id):
-    if 'loggedin' in session:
-        try:
-            pickup_date = request.args.get('pickup_date')
-            dropoff_date = request.args.get('dropoff_date')
-
-            # Validate date fields
-            if not pickup_date or not dropoff_date:
-                flash('Pickup date and dropoff date are required.', 'danger')
-                return redirect(url_for('book_car'))
-
-            # Fetch car details
-            cursor.execute('''
-                SELECT Cars.car_id, Cars.car_name, Cars.price_per_day
-                FROM Cars
-                WHERE Cars.car_id = %s
-            ''', (car_id,))
-            car = cursor.fetchone()
-
-            if not car:
-                flash('Car not found!', 'danger')
-                return redirect(url_for('book_car'))
-
-            # Calculate total amount
-            pickup_date_obj = datetime.strptime(pickup_date, '%Y-%m-%d')
-            dropoff_date_obj = datetime.strptime(dropoff_date, '%Y-%m-%d')
-            total_days = (dropoff_date_obj - pickup_date_obj).days
-            total_amount = int(car['price_per_day'] * total_days * 100)  # Stripe expects amount in cents
-
-            # Render the payment page with payment details
-            return render_template('payment.html', car=car, pickup_date=pickup_date, dropoff_date=dropoff_date, total_days=total_days, total_amount=total_amount)
-
-        except mysql.connector.Error as e:
-            logging.error("Database error: %s", e)
-            flash('Database error occurred. Please try again later!', 'danger')
-            return redirect(url_for('book_car'))
-
-        except Exception as e:
-            logging.error("Unexpected error: %s", e)
-            flash('An unexpected error occurred. Please try again later!', 'danger')
-            return redirect(url_for('book_car'))
-
-    return redirect(url_for('login'))
+@app.route('/payment/cancel')
+def payment_cancel():
+    return render_template('payment_cancel.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
